@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Cash Register</title>
+<style>
+  body { font-family: Arial; padding: 20px; max-width: 600px; margin: auto; }
+  h1 { font-size: 1.5em; }
+  button { margin: 5px; padding: 10px; font-size: 1em; cursor: pointer; }
+  .highlight { color: red; font-weight: bold; }
+  .qty { min-width: 20px; display: inline-block; text-align: center; }
+</style>
+</head>
+<body>
+
+<div id="main-screen">
+  <h1>Burger ($7) 
+    <button onclick="changeQty('burger',1)">+</button> 
+    <span id="burgerQty" class="qty">0</span> 
+    <button onclick="changeQty('burger',-1)">-</button>
+  </h1>
+  <h1>Hot Dog ($5) 
+    <button onclick="changeQty('hotdog',1)">+</button> 
+    <span id="hotdogQty" class="qty">0</span> 
+    <button onclick="changeQty('hotdog',-1)">-</button>
+  </h1>
+
+  <h2>Total: $<span id="total">0</span></h2>
+  <button onclick="toggleComp()">Comp Order</button>
+  <br><br>
+  Payment: 
+  <button onclick="submitOrder('cash')">Cash</button> 
+  <button onclick="submitOrder('card')">Card</button>
+  <br><br>
+  <button onclick="showAdmin()">Admin Panel</button>
+</div>
+
+<div id="admin-screen" style="display:none">
+  <h2>Date: 
+    <select id="dateSelect" onchange="loadStats()"></select>
+  </h2>
+  <div id="stats"></div>
+  <br>
+  <button onclick="showMain()">Back to Home</button>
+</div>
+
+<script>
+// ====== CONFIG ======
+const API_URL = "https://script.google.com/macros/s/AKfycbwb_KZrwBErcWTsvnERHS33q0xXggrP1ymF_uxkH0dHiyxoY_nwZv2H4RsHcJfQAcY3/exec";
+const prices = { burger: 7, hotdog: 5 };
+
+// ====== STATE ======
+let qty = { burger: 0, hotdog: 0 };
+let compOrder = false;
+let allSales = [];
+
+// ====== MAIN FUNCTIONS ======
+function changeQty(item, amount) {
+  qty[item] = Math.max(0, qty[item] + amount);
+  updateDisplay();
+}
+
+function updateDisplay() {
+  document.getElementById("burgerQty").innerText = qty.burger;
+  document.getElementById("hotdogQty").innerText = qty.hotdog;
+  let total = qty.burger * prices.burger + qty.hotdog * prices.hotdog;
+  if (compOrder) total = 0;
+  document.getElementById("total").innerText = total;
+  document.getElementById("total").className = compOrder ? "highlight" : "";
+}
+
+function toggleComp() {
+  compOrder = !compOrder;
+  updateDisplay();
+}
+
+async function submitOrder(paymentType) {
+  if (qty.burger === 0 && qty.hotdog === 0) {
+    alert("No items selected");
+    return;
+  }
+  let today = new Date().toISOString().slice(0,10);
+  await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      date: today,
+      burger: qty.burger,
+      hotdog: qty.hotdog,
+      comp: compOrder,
+      payment: paymentType
+    })
+  });
+  qty = { burger: 0, hotdog: 0 };
+  compOrder = false;
+  updateDisplay();
+  alert("Order submitted");
+}
+
+// ====== ADMIN FUNCTIONS ======
+async function showAdmin() {
+  document.getElementById("main-screen").style.display = "none";
+  document.getElementById("admin-screen").style.display = "block";
+  let res = await fetch(API_URL);
+  allSales = await res.json();
+  let dates = [...new Set(allSales.map(r => r.date))].filter(Boolean);
+  let dateSelect = document.getElementById("dateSelect");
+  dateSelect.innerHTML = "";
+  dates.forEach(date => {
+    let opt = document.createElement("option");
+    opt.value = date;
+    opt.innerText = date;
+    dateSelect.appendChild(opt);
+  });
+  if (dates.length > 0) loadStats();
+}
+
+function loadStats() {
+  let date = document.getElementById("dateSelect").value;
+  let data = allSales.filter(r => r.date === date);
+  let stats = {
+    totalMoney: 0, totalItems: 0,
+    burgerMoney: 0, burgerItems: 0,
+    hotdogMoney: 0, hotdogItems: 0,
+    cashMoney: 0, cashItems: 0,
+    cardMoney: 0, cardItems: 0
+  };
+  data.forEach(o => {
+    let orderTotal = (o.comp === true || o.comp === "true") ? 0 : o.burger * prices.burger + o.hotdog * prices.hotdog;
+    stats.totalMoney += orderTotal;
+    stats.totalItems += Number(o.burger) + Number(o.hotdog);
+    stats.burgerMoney += (o.comp === true || o.comp === "true") ? 0 : o.burger * prices.burger;
+    stats.burgerItems += Number(o.burger);
+    stats.hotdogMoney += (o.comp === true || o.comp === "true") ? 0 : o.hotdog * prices.hotdog;
+    stats.hotdogItems += Number(o.hotdog);
+    if (o.payment === 'cash') {
+      stats.cashMoney += orderTotal; stats.cashItems += Number(o.burger) + Number(o.hotdog);
+    } else {
+      stats.cardMoney += orderTotal; stats.cardItems += Number(o.burger) + Number(o.hotdog);
+    }
+  });
+  document.getElementById("stats").innerHTML = `
+    <h3>Total:</h3>
+    Money: $${stats.totalMoney} <br> Items: ${stats.totalItems}
+    <h3>Hot Dogs:</h3>
+    Money: $${stats.hotdogMoney} <br> Items: ${stats.hotdogItems}
+    <h3>Burgers:</h3>
+    Money: $${stats.burgerMoney} <br> Items: ${stats.burgerItems}
+    <h3>Cash:</h3>
+    Money: $${stats.cashMoney} <br> Items: ${stats.cashItems}
+    <h3>Card:</h3>
+    Money: $${stats.cardMoney} <br> Items: ${stats.cardItems}
+  `;
+}
+
+function showMain() {
+  document.getElementById("admin-screen").style.display = "none";
+  document.getElementById("main-screen").style.display = "block";
+}
+
+updateDisplay();
+</script>
+
+</body>
+</html>
