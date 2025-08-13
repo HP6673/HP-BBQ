@@ -4,41 +4,68 @@
 <meta charset="UTF-8">
 <title>Cash Register</title>
 <style>
-  body { 
-    font-family: Arial; 
-    padding: 20px; 
-    max-width: 600px; 
-    margin: auto; 
-    text-align: center; 
+  body {
+    font-family: Arial;
+    padding: 20px;
+    max-width: 600px;
+    margin: auto;
+    text-align: center;
   }
-  table { 
-    width: auto; 
-    margin: auto; 
-    border-collapse: collapse; 
-    margin-bottom: 15px; 
+  table {
+    width: auto;
+    margin: auto;
+    border-collapse: collapse;
+    margin-bottom: 15px;
   }
-  td { 
-    padding: 8px; 
-    text-align: center; 
+  td { padding: 8px; text-align: center; }
+  div, h2, h1 {
+    margin: 10px 0;
+    font-size: 1.2em;
+    font-weight: normal;
   }
-  div, h2, h1 { 
-    margin: 10px 0; 
-    font-size: 1.2em; 
-    font-weight: normal; 
+  button {
+    margin: 3px;
+    padding: 8px 12px;
+    font-size: 1em;
+    cursor: pointer;
   }
-  button { 
-    margin: 3px; 
-    padding: 8px 12px; 
-    font-size: 1em; 
-    cursor: pointer; 
+  .highlight { color: red; font-weight: bold; }
+  .selected { background-color: black; color: white; }
+
+  /* Admin layout */
+  .admin-total {
+    margin-top: 6px;
+    margin-bottom: 8px;
+    text-align: center;
+    font-weight: normal;
   }
-  .highlight { 
-    color: red; 
-    font-weight: bold; 
+  .admin-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    text-align: left;
   }
-  .selected { 
-    background-color: black; 
-    color: white; 
+  .card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .card h3 {
+    margin: 0 0 6px 0;
+    font-size: 1.1em;
+    font-weight: bold;
+    text-align: center;
+  }
+  .kv { margin: 2px 0; }
+
+  /* Admin loading states */
+  #admin-loading {
+    display: none;
+    margin-top: 10px;
+    font-style: italic;
+  }
+  #admin-content {
+    display: none;
   }
 </style>
 </head>
@@ -69,7 +96,7 @@
   <div>Total: $<span id="total">0</span></div>
 
   Payment:
-  <button id="cashBtn" onclick="selectPayment('cash')">Cash</button> 
+  <button id="cashBtn" onclick="selectPayment('cash')">Cash</button>
   <button id="cardBtn" onclick="selectPayment('card')">Card</button>
   <br><br>
   <button id="submitBtn" onclick="submitOrder(event)">Submit Order</button>
@@ -79,12 +106,45 @@
 </div>
 
 <div id="admin-screen" style="display:none">
-  <h2>Date: 
-    <select id="dateSelect" onchange="loadStats()"></select>
-  </h2>
-  <div id="stats"></div>
-  <br>
-  <button onclick="showMain()">Back to Home</button>
+  <!-- Loading message shown while fetching -->
+  <div id="admin-loading" aria-live="polite">Loading admin data…</div>
+
+  <!-- Admin content appears after data loads -->
+  <div id="admin-content">
+    <h2>Date:
+      <select id="dateSelect" onchange="loadStats()"></select>
+    </h2>
+
+    <!-- TOTAL centered -->
+    <div id="totalBlock" class="admin-total"></div>
+
+    <!-- 2x2 grid: Hot Dogs | Cash ; Burger | Card -->
+    <div class="admin-grid">
+      <div class="card">
+        <h3>Hot Dogs</h3>
+        <div class="kv" id="hdMoney"></div>
+        <div class="kv" id="hdItems"></div>
+      </div>
+      <div class="card">
+        <h3>Cash</h3>
+        <div class="kv" id="cashMoney"></div>
+        <div class="kv" id="cashItems"></div>
+      </div>
+      <div class="card">
+        <h3>Burger</h3>
+        <div class="kv" id="bgMoney"></div>
+        <div class="kv" id="bgItems"></div>
+      </div>
+      <div class="card">
+        <h3>Card</h3>
+        <div class="kv" id="cardMoney"></div>
+        <div class="kv" id="cardItems"></div>
+      </div>
+    </div>
+
+    <br>
+    <button onclick="showMain()">Back to Home</button>
+  </div>
 </div>
 
 <script>
@@ -98,12 +158,11 @@ let compOrder = false;
 let allSales = [];
 let selectedPayment = null;
 
-// ====== MAIN FUNCTIONS ======
+// ====== MAIN (POS) ======
 function changeQty(item, amount) {
   qty[item] = Math.max(0, qty[item] + amount);
   updateDisplay();
 }
-
 function updateDisplay() {
   document.getElementById("burgerQty").innerText = qty.burger;
   document.getElementById("hotdogQty").innerText = qty.hotdog;
@@ -112,12 +171,7 @@ function updateDisplay() {
   document.getElementById("total").innerText = total;
   document.getElementById("total").className = compOrder ? "highlight" : "";
 }
-
-function toggleComp() {
-  compOrder = !compOrder;
-  updateDisplay();
-}
-
+function toggleComp() { compOrder = !compOrder; updateDisplay(); }
 function selectPayment(type) {
   selectedPayment = type;
   document.getElementById("cashBtn").classList.toggle("selected", type === 'cash');
@@ -126,21 +180,14 @@ function selectPayment(type) {
 
 async function submitOrder(event) {
   const submitBtn = document.getElementById("submitBtn");
+  if (qty.burger === 0 && qty.hotdog === 0) { alert("No items selected"); return; }
+  if (!selectedPayment) { alert("Select a payment method"); return; }
 
-  if (qty.burger === 0 && qty.hotdog === 0) {
-    alert("No items selected");
-    return;
-  }
-  if (!selectedPayment) {
-    alert("Select a payment method");
-    return;
-  }
-
-  // Show loading state
+  // loading state
   submitBtn.textContent = "Loading...";
   submitBtn.disabled = true;
 
-  let today = new Date().toISOString().slice(0,10);
+  const today = new Date().toISOString().slice(0,10);
   await fetch(API_URL, {
     method: "POST",
     body: JSON.stringify({
@@ -152,7 +199,7 @@ async function submitOrder(event) {
     })
   });
 
-  // Reset order state
+  // reset
   qty = { burger: 0, hotdog: 0 };
   compOrder = false;
   selectedPayment = null;
@@ -160,67 +207,104 @@ async function submitOrder(event) {
   document.getElementById("cardBtn").classList.remove("selected");
   updateDisplay();
 
-  // Restore button
+  // restore button
   submitBtn.textContent = "Submit Order";
   submitBtn.disabled = false;
 
   alert("Order submitted");
 }
 
-// ====== ADMIN FUNCTIONS ======
+// ====== ADMIN ======
 async function showAdmin() {
+  // Switch screens
   document.getElementById("main-screen").style.display = "none";
   document.getElementById("admin-screen").style.display = "block";
-  let res = await fetch(API_URL);
-  allSales = await res.json();
-  let dates = [...new Set(allSales.map(r => r.date))].filter(Boolean);
-  let dateSelect = document.getElementById("dateSelect");
+
+  // Show loading, hide content
+  const loadingEl = document.getElementById("admin-loading");
+  const contentEl = document.getElementById("admin-content");
+  const dateSelect = document.getElementById("dateSelect");
+  loadingEl.style.display = "block";
+  contentEl.style.display = "none";
+  dateSelect.disabled = true;
   dateSelect.innerHTML = "";
-  dates.forEach(date => {
-    let opt = document.createElement("option");
-    opt.value = date;
-    opt.innerText = date;
-    dateSelect.appendChild(opt);
-  });
-  if (dates.length > 0) loadStats();
+
+  try {
+    const res = await fetch(API_URL);
+    allSales = await res.json();
+
+    // Build date list (only dates with data)
+    const dates = [...new Set(allSales.map(r => r.date))].filter(Boolean);
+    dates.forEach(date => {
+      const opt = document.createElement("option");
+      opt.value = date; opt.innerText = date;
+      dateSelect.appendChild(opt);
+    });
+
+    // Show content if any dates exist
+    if (dates.length > 0) {
+      loadStats();
+      contentEl.style.display = "block";
+    } else {
+      // No data yet
+      document.getElementById("totalBlock").innerHTML = "<strong>Total</strong><br>No data for any date yet.";
+      contentEl.style.display = "block";
+    }
+  } catch (e) {
+    alert("Error loading admin data. Please try again.");
+  } finally {
+    // Hide loading and enable select
+    loadingEl.style.display = "none";
+    dateSelect.disabled = false;
+  }
 }
 
 function loadStats() {
-  let date = document.getElementById("dateSelect").value;
-  let data = allSales.filter(r => r.date === date);
-  let stats = {
+  const date = document.getElementById("dateSelect").value;
+  const data = allSales.filter(r => r.date === date);
+
+  const stats = {
     totalMoney: 0, totalItems: 0,
     burgerMoney: 0, burgerItems: 0,
     hotdogMoney: 0, hotdogItems: 0,
     cashMoney: 0, cashItems: 0,
     cardMoney: 0, cardItems: 0
   };
+
   data.forEach(o => {
-    let orderTotal = (o.comp === true || o.comp === "true") ? 0 : o.burger * prices.burger + o.hotdog * prices.hotdog;
+    const isComp = (o.comp === true || o.comp === "true");
+    const orderTotal = isComp ? 0 : (Number(o.burger)*prices.burger + Number(o.hotdog)*prices.hotdog);
     stats.totalMoney += orderTotal;
     stats.totalItems += Number(o.burger) + Number(o.hotdog);
-    stats.burgerMoney += (o.comp === true || o.comp === "true") ? 0 : o.burger * prices.burger;
+
+    stats.burgerMoney += isComp ? 0 : Number(o.burger)*prices.burger;
     stats.burgerItems += Number(o.burger);
-    stats.hotdogMoney += (o.comp === true || o.comp === "true") ? 0 : o.hotdog * prices.hotdog;
+
+    stats.hotdogMoney += isComp ? 0 : Number(o.hotdog)*prices.hotdog;
     stats.hotdogItems += Number(o.hotdog);
-    if (o.payment === 'cash') {
-      stats.cashMoney += orderTotal; stats.cashItems += Number(o.burger) + Number(o.hotdog);
+
+    if (o.payment === "cash") {
+      stats.cashMoney += orderTotal;
+      stats.cashItems += Number(o.burger) + Number(o.hotdog);
     } else {
-      stats.cardMoney += orderTotal; stats.cardItems += Number(o.burger) + Number(o.hotdog);
+      stats.cardMoney += orderTotal;
+      stats.cardItems += Number(o.burger) + Number(o.hotdog);
     }
   });
-  document.getElementById("stats").innerHTML = `
-    <h3>Total:</h3>
-    Money: $${stats.totalMoney} <br> Items: ${stats.totalItems}
-    <h3>Hot Dogs:</h3>
-    Money: $${stats.hotdogMoney} <br> Items: ${stats.hotdogItems}
-    <h3>Burgers:</h3>
-    Money: $${stats.burgerMoney} <br> Items: ${stats.burgerItems}
-    <h3>Cash:</h3>
-    Money: $${stats.cashMoney} <br> Items: ${stats.cashItems}
-    <h3>Card:</h3>
-    Money: $${stats.cardMoney} <br> Items: ${stats.cardItems}
-  `;
+
+  // Centered TOTAL block
+  document.getElementById("totalBlock").innerHTML =
+    `<strong>Total</strong><br>Money: $${stats.totalMoney} &nbsp;&nbsp; | &nbsp;&nbsp; Items: ${stats.totalItems}`;
+
+  // 2x2 grid population
+  document.getElementById("hdMoney").textContent   = `Money: $${stats.hotdogMoney}`;
+  document.getElementById("hdItems").textContent   = `Items: ${stats.hotdogItems}`;
+  document.getElementById("bgMoney").textContent   = `Money: $${stats.burgerMoney}`;
+  document.getElementById("bgItems").textContent   = `Items: ${stats.burgerItems}`;
+  document.getElementById("cashMoney").textContent = `Money: $${stats.cashMoney}`;
+  document.getElementById("cashItems").textContent = `Items: ${stats.cashItems}`;
+  document.getElementById("cardMoney").textContent = `Money: $${stats.cardMoney}`;
+  document.getElementById("cardItems").textContent = `Items: ${stats.cardItems}`;
 }
 
 function showMain() {
