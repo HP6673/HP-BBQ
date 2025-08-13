@@ -5,34 +5,51 @@
 <title>Cash Register</title>
 <style>
   body { font-family: Arial; padding: 20px; max-width: 600px; margin: auto; }
-  h1 { font-size: 1.5em; }
-  button { margin: 5px; padding: 10px; font-size: 1em; cursor: pointer; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+  td { padding: 8px; text-align: center; }
+  h2 { margin: 10px 0; }
+  button { margin: 3px; padding: 8px 12px; font-size: 1em; cursor: pointer; }
   .highlight { color: red; font-weight: bold; }
-  .qty { min-width: 20px; display: inline-block; text-align: center; }
+  .selected { background-color: black; color: white; }
+  .top-row-item { text-align: left; }
+  .top-row-price { text-align: center; }
+  .top-row-controls { text-align: right; }
 </style>
 </head>
 <body>
 
 <div id="main-screen">
-  <h1>Burger ($7) 
-    <button onclick="changeQty('burger',1)">+</button> 
-    <span id="burgerQty" class="qty">0</span> 
-    <button onclick="changeQty('burger',-1)">-</button>
-  </h1>
-  <h1>Hot Dog ($5) 
-    <button onclick="changeQty('hotdog',1)">+</button> 
-    <span id="hotdogQty" class="qty">0</span> 
-    <button onclick="changeQty('hotdog',-1)">-</button>
-  </h1>
+  <table>
+    <tr>
+      <td class="top-row-item">Burger</td>
+      <td class="top-row-price">$7</td>
+      <td class="top-row-controls">
+        <button onclick="changeQty('burger',1)">+</button>
+        <span id="burgerQty">0</span>
+        <button onclick="changeQty('burger',-1)">-</button>
+      </td>
+    </tr>
+    <tr>
+      <td class="top-row-item">Hot Dog</td>
+      <td class="top-row-price">$5</td>
+      <td class="top-row-controls">
+        <button onclick="changeQty('hotdog',1)">+</button>
+        <span id="hotdogQty">0</span>
+        <button onclick="changeQty('hotdog',-1)">-</button>
+      </td>
+    </tr>
+  </table>
 
   <h2>Total: $<span id="total">0</span></h2>
-  <button onclick="toggleComp()">Comp Order</button>
+
+  Payment:
+  <button id="cashBtn" onclick="selectPayment('cash')">Cash</button> 
+  <button id="cardBtn" onclick="selectPayment('card')">Card</button>
   <br><br>
-  Payment: 
-  <button onclick="submitOrder('cash')">Cash</button> 
-  <button onclick="submitOrder('card')">Card</button>
+  <button onclick="submitOrder()">Submit Order</button>
   <br><br>
   <button onclick="showAdmin()">Admin Panel</button>
+  <button onclick="toggleComp()">Comp Order</button>
 </div>
 
 <div id="admin-screen" style="display:none">
@@ -53,6 +70,7 @@ const prices = { burger: 7, hotdog: 5 };
 let qty = { burger: 0, hotdog: 0 };
 let compOrder = false;
 let allSales = [];
+let selectedPayment = null;
 
 // ====== MAIN FUNCTIONS ======
 function changeQty(item, amount) {
@@ -74,9 +92,19 @@ function toggleComp() {
   updateDisplay();
 }
 
-async function submitOrder(paymentType) {
+function selectPayment(type) {
+  selectedPayment = type;
+  document.getElementById("cashBtn").classList.toggle("selected", type === 'cash');
+  document.getElementById("cardBtn").classList.toggle("selected", type === 'card');
+}
+
+async function submitOrder() {
   if (qty.burger === 0 && qty.hotdog === 0) {
     alert("No items selected");
+    return;
+  }
+  if (!selectedPayment) {
+    alert("Select a payment method");
     return;
   }
   let today = new Date().toISOString().slice(0,10);
@@ -87,11 +115,14 @@ async function submitOrder(paymentType) {
       burger: qty.burger,
       hotdog: qty.hotdog,
       comp: compOrder,
-      payment: paymentType
+      payment: selectedPayment
     })
   });
   qty = { burger: 0, hotdog: 0 };
   compOrder = false;
+  selectedPayment = null;
+  document.getElementById("cashBtn").classList.remove("selected");
+  document.getElementById("cardBtn").classList.remove("selected");
   updateDisplay();
   alert("Order submitted");
 }
