@@ -19,10 +19,33 @@
     max-width: 720px;
     padding: 20px;
     text-align: center;
-    font-size: var(--font-size); /* unified */
+    font-size: var(--font-size);
     line-height: 1.35;
   }
-  /* Grid + Card (shared across Main & Admin) */
+
+  /* Access Gate */
+  #gate {
+    position: fixed; inset: 0; background: #fff; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  #gate .panel {
+    width: 100%; max-width: 360px;
+    border: 1px solid #ddd; border-radius: var(--card-radius);
+    padding: 18px;
+    text-align: center;
+  }
+  #gate input {
+    width: 100%; padding: 12px 14px; font-size: var(--font-size);
+    border: 1px solid #ccc; border-radius: 10px; margin-top: 8px;
+    text-align: center;
+  }
+  #gate button {
+    margin-top: 10px; width: 100%;
+  }
+  #gate .err { color: #c00; min-height: 1.3em; margin-top: 6px; }
+
+  /* Grid + Card (shared) */
   .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -52,16 +75,13 @@
   /* Buttons */
   button {
     padding: var(--btn-pad);
-    font-size: var(--font-size); /* unified size */
+    font-size: var(--font-size);
     border-radius: 10px;
     border: 1px solid #ccc;
     background: #f7f7f7;
     cursor: pointer;
   }
-  button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+  button:disabled { opacity: 0.6; cursor: not-allowed; }
   .btn-row {
     display: flex;
     gap: var(--gap);
@@ -74,7 +94,7 @@
   /* Quantity rows in Items card */
   .item-row {
     display: grid;
-    grid-template-columns: 1fr auto auto auto; /* Name | Price | + | - with qty centered separately */
+    grid-template-columns: 1fr auto auto auto;
     align-items: center;
     gap: 10px;
     padding: 6px 0;
@@ -110,14 +130,21 @@
   /* Screen toggles */
   #admin-screen { display: none; }
 
-  /* Headings (kept same weight/size baseline) */
-  .section-title {
-    margin: 8px 0 12px;
-    font-weight: bold;
-  }
+  /* Section title */
+  .section-title { margin: 8px 0 12px; font-weight: bold; }
 </style>
 </head>
 <body>
+
+<!-- ===== ACCESS GATE (code: 5253) ===== -->
+<div id="gate" aria-modal="true" role="dialog">
+  <div class="panel">
+    <h3>Enter Access Code</h3>
+    <input id="gateInput" type="password" inputmode="numeric" placeholder="Code" />
+    <div class="err" id="gateErr"></div>
+    <button onclick="unlock()">Enter</button>
+  </div>
+</div>
 
 <!-- ===== MAIN (POS) ===== -->
 <div id="main-screen">
@@ -172,7 +199,7 @@
       </div>
     </div>
 
-    <!-- (Optional) Quick Summary (mirrors total for at-a-glance) -->
+    <!-- Summary -->
     <div class="card">
       <h3>Summary</h3>
       <div class="kv" id="summaryLines" style="text-align:center;">
@@ -229,182 +256,27 @@
 <script>
 /* ==== CONFIG ==== */
 const API_URL = "https://script.google.com/macros/s/AKfycbwb_KZrwBErcWTsvnERHS33q0xXggrP1ymF_uxkH0dHiyxoY_nwZv2H4RsHcJfQAcY3/exec";
+const ACCESS_CODE = "5253";
 const prices = { burger: 7, hotdog: 5 };
 
-/* ==== STATE ==== */
-let qty = { burger: 0, hotdog: 0 };
-let compOrder = false;
-let selectedPayment = null;
-let allSales = [];
-
-/* ==== POS LOGIC ==== */
-function changeQty(item, delta) {
-  qty[item] = Math.max(0, qty[item] + delta);
-  renderPOS();
-}
-function toggleComp() {
-  compOrder = !compOrder;
-  renderPOS();
-}
-function selectPayment(type) {
-  selectedPayment = type;
-  document.getElementById("cashBtn").classList.toggle("selected", type === "cash");
-  document.getElementById("cardBtn").classList.toggle("selected", type === "card");
-}
-
-/* Render Main UI */
-function renderPOS() {
-  // quantities
-  document.getElementById("burgerQty").textContent = qty.burger;
-  document.getElementById("hotdogQty").textContent = qty.hotdog;
-
-  // total
-  let total = qty.burger * prices.burger + qty.hotdog * prices.hotdog;
-  const totalEl = document.getElementById("total");
-  if (compOrder) total = 0;
-  totalEl.textContent = total;
-  totalEl.className = compOrder ? "highlight" : "";
-
-  // comp hint + summary
-  const compHint = document.getElementById("compHint");
-  compHint.textContent = compOrder ? "Comp active: total is $0 (items still counted as sold)" : "";
-  document.getElementById("summaryLines").textContent =
-    `${qty.burger} Burgers, ${qty.hotdog} Hot Dogs`;
-}
-
-/* Submit with loading state */
-async function submitOrder(e) {
-  const btn = document.getElementById("submitBtn");
-
-  if (qty.burger === 0 && qty.hotdog === 0) return alert("No items selected");
-  if (!selectedPayment) return alert("Select a payment method");
-
-  btn.textContent = "Loading…";
-  btn.disabled = true;
-
-  const today = new Date().toISOString().slice(0,10);
-  try {
-    await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({
-        date: today,
-        burger: qty.burger,
-        hotdog: qty.hotdog,
-        comp: compOrder,
-        payment: selectedPayment
-      })
-    });
-    // reset state
-    qty = { burger: 0, hotdog: 0 };
-    compOrder = false;
-    selectedPayment = null;
-    document.getElementById("cashBtn").classList.remove("selected");
-    document.getElementById("cardBtn").classList.remove("selected");
-    renderPOS();
-    alert("Order submitted");
-  } catch (err) {
-    alert("Error submitting order. Please try again.");
-  } finally {
-    btn.textContent = "Submit Order";
-    btn.disabled = false;
+/* ==== ACCESS GATE ==== */
+function unlock() {
+  const val = (document.getElementById("gateInput").value || "").trim();
+  const err = document.getElementById("gateErr");
+  if (val === ACCESS_CODE) {
+    sessionStorage.setItem("cashregister_auth", "ok");
+    document.getElementById("gate").style.display = "none";
+    // focus first button for speed
+    document.getElementById("cashBtn").focus();
+  } else {
+    err.textContent = "Invalid code.";
   }
 }
-
-/* ==== ADMIN LOGIC ==== */
-async function showAdmin() {
-  // Switch screens
-  document.getElementById("main-screen").style.display = "none";
-  document.getElementById("admin-screen").style.display = "block";
-
-  // Show loading
-  const loadingEl = document.getElementById("admin-loading");
-  const contentEl = document.getElementById("admin-content");
-  const dateSelect = document.getElementById("dateSelect");
-  loadingEl.style.display = "block";
-  contentEl.style.display = "none";
-  dateSelect.disabled = true;
-  dateSelect.innerHTML = "";
-
-  try {
-    const res = await fetch(API_URL);
-    allSales = await res.json();
-
-    const dates = [...new Set(allSales.map(r => r.date))].filter(Boolean);
-    dates.forEach(d => {
-      const opt = document.createElement("option");
-      opt.value = d; opt.textContent = d;
-      dateSelect.appendChild(opt);
-    });
-
-    if (dates.length > 0) {
-      loadStats();
-      contentEl.style.display = "block";
-    } else {
-      document.getElementById("totalBlock").innerHTML =
-        "<strong>Total</strong><br>No data available yet.";
-      contentEl.style.display = "block";
-    }
-  } catch (e) {
-    alert("Error loading admin data. Please try again.");
-  } finally {
-    loadingEl.style.display = "none";
-    dateSelect.disabled = false;
+window.addEventListener("keydown", (e) => {
+  if (document.getElementById("gate").style.display !== "none" && e.key === "Enter") {
+    unlock();
   }
-}
-
-function loadStats() {
-  const date = document.getElementById("dateSelect").value;
-  const data = allSales.filter(r => r.date === date);
-
-  const stats = {
-    totalMoney: 0, totalItems: 0,
-    burgerMoney: 0, burgerItems: 0,
-    hotdogMoney: 0, hotdogItems: 0,
-    cashMoney: 0, cashItems: 0,
-    cardMoney: 0, cardItems: 0
-  };
-
-  data.forEach(o => {
-    const isComp = (o.comp === true || o.comp === "true");
-    const orderTotal = isComp ? 0 : (Number(o.burger)*prices.burger + Number(o.hotdog)*prices.hotdog);
-    stats.totalMoney += orderTotal;
-    stats.totalItems += Number(o.burger) + Number(o.hotdog);
-
-    stats.burgerMoney += isComp ? 0 : Number(o.burger)*prices.burger;
-    stats.burgerItems += Number(o.burger);
-
-    stats.hotdogMoney += isComp ? 0 : Number(o.hotdog)*prices.hotdog;
-    stats.hotdogItems += Number(o.hotdog);
-
-    if (o.payment === "cash") {
-      stats.cashMoney += orderTotal;
-      stats.cashItems += Number(o.burger) + Number(o.hotdog);
-    } else {
-      stats.cardMoney += orderTotal;
-      stats.cardItems += Number(o.burger) + Number(o.hotdog);
-    }
-  });
-
-  document.getElementById("totalBlock").innerHTML =
-    `<strong>Total</strong><br>Money: $${stats.totalMoney} &nbsp;|&nbsp; Items: ${stats.totalItems}`;
-
-  document.getElementById("hdMoney").textContent   = `Money: $${stats.hotdogMoney}`;
-  document.getElementById("hdItems").textContent   = `Items: ${stats.hotdogItems}`;
-  document.getElementById("bgMoney").textContent   = `Money: $${stats.burgerMoney}`;
-  document.getElementById("bgItems").textContent   = `Items: ${stats.burgerItems}`;
-  document.getElementById("cashMoney").textContent = `Money: $${stats.cashMoney}`;
-  document.getElementById("cashItems").textContent = `Items: ${stats.cashItems}`;
-  document.getElementById("cardMoney").textContent = `Money: $${stats.cardMoney}`;
-  document.getElementById("cardItems").textContent = `Items: ${stats.cardItems}`;
-}
-
-function showMain() {
-  document.getElementById("admin-screen").style.display = "none";
-  document.getElementById("main-screen").style.display = "block";
-}
-
-/* init */
-renderPOS();
-</script>
-</body>
-</html>
+});
+window.addEventListener("load", () => {
+  if (sessionStorage.getItem("cashregister_auth") === "ok") {
+    document.getElementById("gate").st
