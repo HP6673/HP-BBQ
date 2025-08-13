@@ -23,7 +23,7 @@
     line-height: 1.35;
   }
 
-  /* Access Gate */
+  /* Access Gate (Keypad) */
   #gate {
     position: fixed; inset: 0; background: #fff; z-index: 9999;
     display: flex; align-items: center; justify-content: center;
@@ -34,13 +34,23 @@
     border: 1px solid #ddd; border-radius: var(--card-radius);
     padding: 18px; text-align: center;
   }
-  #gate input {
-    width: 100%; padding: 12px 14px; font-size: var(--font-size);
-    border: 1px solid #ccc; border-radius: 10px; margin-top: 8px;
-    text-align: center;
+  .code-dots {
+    display: flex; justify-content: center; gap: 10px; margin: 10px 0 14px;
   }
-  #gate button { margin-top: 10px; width: 100%; }
-  #gate .err { color: #c00; min-height: 1.3em; margin-top: 6px; }
+  .dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid #999; background: transparent;
+  }
+  .dot.filled { background: #000; border-color: #000; }
+  .keypad {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  }
+  .keypad button {
+    padding: 16px 0; font-size: 20px; border-radius: 10px;
+    border: 1px solid #ccc; background: #f7f7f7; cursor: pointer;
+  }
+  .key-wide { grid-column: span 2; }
+  #gate .err { color: #c00; min-height: 1.3em; margin-top: 10px; }
 
   /* Grid + Card (shared) */
   .grid {
@@ -139,7 +149,7 @@
   /* Section title */
   .section-title { margin: 8px 0 12px; font-weight: bold; }
 
-  /* HP BBQ heading (kept same baseline size for consistency) */
+  /* Brand heading */
   .brand {
     margin: 6px 0 14px;
     font-weight: bold;
@@ -149,13 +159,37 @@
 </head>
 <body>
 
-<!-- ===== ACCESS GATE (code: 5253) ===== -->
+<!-- ===== ACCESS GATE (keypad code: 5253) ===== -->
 <div id="gate" aria-modal="true" role="dialog">
-  <div class="panel">
+  <div class="panel" aria-label="Enter Access Code">
     <h3>Enter Access Code</h3>
-    <input id="gateInput" type="password" inputmode="numeric" placeholder="Code" />
-    <div class="err" id="gateErr"></div>
-    <button onclick="unlock()">Enter</button>
+
+    <!-- Dots representing 4-digit code -->
+    <div class="code-dots" aria-hidden="true">
+      <div class="dot" id="dot0"></div>
+      <div class="dot" id="dot1"></div>
+      <div class="dot" id="dot2"></div>
+      <div class="dot" id="dot3"></div>
+    </div>
+
+    <!-- Keypad -->
+    <div class="keypad">
+      <button onclick="pressKey('1')">1</button>
+      <button onclick="pressKey('2')">2</button>
+      <button onclick="pressKey('3')">3</button>
+      <button onclick="pressKey('4')">4</button>
+      <button onclick="pressKey('5')">5</button>
+      <button onclick="pressKey('6')">6</button>
+      <button onclick="pressKey('7')">7</button>
+      <button onclick="pressKey('8')">8</button>
+      <button onclick="pressKey('9')">9</button>
+      <button onclick="clearCode()" class="key-wide">Clear</button>
+      <button onclick="pressKey('0')">0</button>
+      <button onclick="backspace()">⌫</button>
+      <button onclick="unlock()" class="key-wide">Enter</button>
+    </div>
+
+    <div class="err" id="gateErr" aria-live="polite"></div>
   </div>
 </div>
 
@@ -202,7 +236,7 @@
     <!-- Actions -->
     <div class="card">
       <h3>Actions</h3>
-      <!-- COMP moved above Submit -->
+      <!-- COMP above Submit -->
       <div class="btn-row" style="margin-top: 6px;">
         <button class="btn-full" onclick="toggleComp()">Comp Order</button>
       </div>
@@ -280,21 +314,48 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwb_KZrwBErcWTsvnERHS33
 const ACCESS_CODE = "5253";
 const prices = { burger: 7, hotdog: 5 };
 
-/* ==== ACCESS GATE ==== */
+/* ==== ACCESS GATE (Keypad) ==== */
+let gateBuffer = "";
+function updateDots() {
+  for (let i = 0; i < 4; i++) {
+    const d = document.getElementById("dot"+i);
+    if (!d) continue;
+    d.classList.toggle("filled", i < gateBuffer.length);
+  }
+}
+function pressKey(digit) {
+  if (gateBuffer.length >= 4) return; // max 4 digits
+  gateBuffer += digit;
+  updateDots();
+  document.getElementById("gateErr").textContent = "";
+  if (gateBuffer.length === 4) unlock(); // auto-enter on 4 digits
+}
+function backspace() {
+  if (gateBuffer.length === 0) return;
+  gateBuffer = gateBuffer.slice(0, -1);
+  updateDots();
+}
+function clearCode() {
+  gateBuffer = "";
+  updateDots();
+  document.getElementById("gateErr").textContent = "";
+}
 function unlock() {
-  const val = (document.getElementById("gateInput").value || "").trim();
-  const err = document.getElementById("gateErr");
-  if (val === ACCESS_CODE) {
+  if (gateBuffer === ACCESS_CODE) {
     sessionStorage.setItem("cashregister_auth", "ok");
     document.getElementById("gate").style.display = "none";
     document.getElementById("cashBtn").focus();
   } else {
-    err.textContent = "Invalid code.";
+    document.getElementById("gateErr").textContent = "Invalid code.";
+    clearCode();
   }
 }
 window.addEventListener("keydown", (e) => {
-  if (document.getElementById("gate").style.display !== "none" && e.key === "Enter") {
-    unlock();
+  if (document.getElementById("gate").style.display !== "none") {
+    if (e.key >= "0" && e.key <= "9") { pressKey(e.key); }
+    else if (e.key === "Backspace") { backspace(); }
+    else if (e.key.toLowerCase() === "c") { clearCode(); }
+    else if (e.key === "Enter") { unlock(); }
   }
 });
 window.addEventListener("load", () => {
@@ -302,11 +363,11 @@ window.addEventListener("load", () => {
     document.getElementById("gate").style.display = "none";
   } else {
     document.getElementById("gate").style.display = "flex";
-    document.getElementById("gateInput").focus();
   }
   // set order date default to today
   const od = document.getElementById("orderDate");
   if (od) od.value = todayStr();
+  updateDots();
 });
 
 /* ==== STATE ==== */
@@ -421,7 +482,7 @@ async function showAdmin() {
       const opt = document.createElement("option");
       opt.value = d;
       const [y, m, day] = d.split("-");
-      opt.textContent = `${parseInt(m)}/${parseInt(day)}/${y}`;
+      opt.textContent = `${parseInt(m)}/${parseInt(day)}/${y}`; // M/D/YYYY
       dateSelect.appendChild(opt);
     });
 
