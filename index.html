@@ -4,16 +4,45 @@
 <meta charset="UTF-8">
 <title>Cash Register</title>
 <style>
-  body { font-family: Arial; padding: 20px; max-width: 600px; margin: auto; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-  td { padding: 8px; text-align: center; }
-  h2 { margin: 10px 0; }
-  button { margin: 3px; padding: 8px 12px; font-size: 1em; cursor: pointer; }
-  .highlight { color: red; font-weight: bold; }
-  .selected { background-color: black; color: white; }
-  .top-row-item { text-align: left; }
-  .top-row-price { text-align: center; }
-  .top-row-controls { text-align: right; }
+  body { 
+    font-family: Arial; 
+    padding: 20px; 
+    max-width: 600px; 
+    margin: auto; 
+    text-align: center; 
+  }
+  table { 
+    width: auto; 
+    margin: auto; 
+    border-collapse: collapse; 
+    margin-bottom: 15px; 
+  }
+  td { 
+    padding: 8px; 
+    text-align: center; 
+  }
+  h2, h1 { 
+    margin: 10px 0; 
+    font-size: 1.2em; 
+    font-weight: normal; 
+  }
+  button { 
+    margin: 3px; 
+    padding: 8px 12px; 
+    font-size: 1em; 
+    cursor: pointer; 
+  }
+  .highlight { 
+    color: red; 
+    font-weight: bold; 
+  }
+  .selected { 
+    background-color: black; 
+    color: white; 
+  }
+  .top-row-item, .top-row-price, .top-row-controls { 
+    text-align: center; 
+  }
 </style>
 </head>
 <body>
@@ -40,7 +69,8 @@
     </tr>
   </table>
 
-  <h2>Total: $<span id="total">0</span></h2>
+  <div>Total: $<span id="total">0</span></div>
+  <br>
 
   Payment:
   <button id="cashBtn" onclick="selectPayment('cash')">Cash</button> 
