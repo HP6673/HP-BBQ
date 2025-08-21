@@ -29,7 +29,8 @@
     background:var(--bg); color:var(--text);
     font-family:Arial, Helvetica, sans-serif;
     font-size:var(--font); line-height:1.35;
-    padding:20px; text-align:center;
+    padding:20px 20px 48px; /* extra bottom for footer */
+    text-align:center;
     -webkit-tap-highlight-color:transparent;
     touch-action:manipulation;
   }
@@ -164,6 +165,14 @@
   .keypad button{padding:16px 0; font-size:20px; border:3px solid #000; border-radius:0; background:#fff; cursor:pointer}
   .key-wide{grid-column:span 2}
   #gate .err{color:#c00; min-height:1.3em; margin-top:10px}
+
+  /* Footer */
+  .footer{
+    position:fixed; left:0; right:0; bottom:6px;
+    text-align:center; font-size:12px; color:#000;
+    pointer-events:none; /* clicks pass through */
+  }
+  .footer span{background:rgba(255,255,255,0.85); padding:2px 6px}
 </style>
 </head>
 <body>
@@ -184,6 +193,7 @@
       <button onclick="unlock()" class="key-wide">Enter</button>
     </div>
     <div class="err" id="gateErr" aria-live="polite"></div>
+    <div style="margin-top:10px; font-size:12px; opacity:0.8;">©MrPress Enterprise - Version <span id="verGate"></span></div>
   </div>
 </div>
 
@@ -209,7 +219,7 @@
       </div>
       <div class="item-row">
         <div class="item-name">Hot Dog</div>
-        <div class="price">$5</div>
+        <div class="price">$5</</div>
         <div class="qty-controls">
           <button onclick="changeQty('hotdog',1)">+</button>
           <span id="hotdogQty" class="qty-badge">0</span>
@@ -281,7 +291,7 @@
   <div class="card" style="text-align:center;">
     <h1>Admin Panel</h1>
     <div class="btn-row" style="margin:8px 0 14px">
-      <a class="btn-full" style="text-decoration:none; text-align:center" href="https://drive.google.com/drive/folders/1eZPlupv0k_2W8foDiN2PhuQwjjIoMJz6?usp=sharing" target="_blank">Files (Drive Folder)</a>
+      <button class="btn-full" onclick="window.open('https://drive.google.com/drive/folders/1eZPlupv0k_2W8foDiN2PhuQwjjIoMJz6?usp=sharing','_blank')">Files (Drive Folder)</button>
       <button class="btn-full" onclick="openSheetModal()">View Sheet (Editable)</button>
     </div>
     <div class="kv">
@@ -291,8 +301,6 @@
     <div id="totalBlock" class="kv" style="margin-top:8px;"></div>
   </div>
 
-  <div id="admin-loading" class="kv" style="display:none; font-weight:800;">Loading…</div>
-
   <div id="admin-content">
     <div class="grid">
       <div class="card"><h3>Hot Dogs</h3><div id="hdMoney"></div><div id="hdItems"></div></div>
@@ -300,6 +308,8 @@
       <div class="card"><h3>Burger</h3><div id="bgMoney"></div><div id="bgItems"></div></div>
       <div class="card"><h3>Card</h3><div id="cardMoney"></div><div id="cardItems"></div></div>
       <div class="card"><h3>Soda</h3><div id="sdMoney"></div><div id="sdItems"></div></div>
+      <!-- New 6th box under Card -->
+      <div class="card"><h3>Total</h3><div id="totMoney"></div><div id="totItems"></div></div>
     </div>
 
     <div class="btn-row" style="margin-top:14px">
@@ -334,10 +344,14 @@
   <div id="undoProgress"></div>
 </div>
 
+<!-- Footer (on every page) -->
+<div class="footer"><span>©MrPress Enterprise - Version <span id="versionText"></span></span></div>
+
 <script>
 /* ===== CONFIG ===== */
 const API_URL = "https://script.google.com/macros/s/AKfycbwb_KZrwBErcWTsvnERHS33q0xXggrP1ymF_uxkH0dHiyxoY_nwZv2H4RsHcJfQAcY3/exec";
 const ACCESS_CODE = "5253";
+const APP_VERSION = "0.2"; /* incremented per your rule */
 const prices = { burger:7, hotdog:5, soda:1 };
 
 /* ===== ACCESS GATE ===== */
@@ -350,6 +364,7 @@ function unlock(){
   if(gateBuffer===ACCESS_CODE){
     document.getElementById("gate").style.display="none";
     const od=document.getElementById("orderDate"); if(od && !od.value) od.value=todayStr();
+    // IMPORTANT: Do NOT auto-open sheet modal here.
   }else{ document.getElementById("gateErr").textContent="Invalid code."; clearCode(); }
 }
 window.addEventListener("keydown",(e)=>{
@@ -377,9 +392,15 @@ let removed = null;
 let undoTimer=null;
 let timerInterval=null;
 
-/* ===== MAIN (POS) ===== */
-window.addEventListener('load', ()=>{ const od=document.getElementById('orderDate'); if(od) od.value=todayStr(); renderPOS(); });
+/* ===== INIT ===== */
+window.addEventListener('load', ()=>{
+  const od=document.getElementById('orderDate'); if(od) od.value=todayStr();
+  document.getElementById('versionText').textContent = APP_VERSION;
+  document.getElementById('verGate').textContent = APP_VERSION;
+  renderPOS();
+});
 
+/* ===== MAIN (POS) ===== */
 function changeQty(item,delta){ qty[item]=Math.max(0, qty[item]+delta); renderPOS(); }
 function toggleComp(){ compOrder=!compOrder; renderPOS(); }
 function selectPayment(type){
@@ -399,7 +420,7 @@ function renderPOS(){
 
 async function submitOrder(){
   if(qty.burger===0 && qty.hotdog===0 && qty.soda===0){ alert('No items selected'); return; }
-  // FIX: payment is required only if NOT comp
+  // Payment required only if NOT comp
   if(!compOrder && !selectedPayment){ alert('Select a payment method'); return; }
 
   const btn=document.getElementById('submitBtn');
@@ -412,6 +433,7 @@ async function submitOrder(){
   try{
     const res = await fetch(API_URL, {
       method:'POST',
+      headers:{ 'Content-Type':'application/json' },   /* fix: ensure JSON body */
       body: JSON.stringify({
         mode:'create',
         Date: dateStr,
@@ -420,9 +442,10 @@ async function submitOrder(){
         Soda: qty.soda,
         'Payment Method': payment,
         Total: total,
-        Time: '' // set on completion
+        Time: '' // set on completion after undo window
       })
     });
+    if(!res.ok){ throw new Error('Network response not ok'); }
     const data = await res.json();
     const rowId = data && data.rowId ? data.rowId : null;
 
@@ -444,7 +467,7 @@ async function submitOrder(){
     renderPOS();
     alert('Order submitted');
   }catch(e){
-    alert('Error submitting order.');
+    alert('Error submitting order. Check Apps Script deployment and headers.');
   }finally{
     btn.textContent='Submit Order'; btn.disabled=false; showOverlay(false);
   }
@@ -532,6 +555,7 @@ function removeTicket(id){
       try{
         await fetch(API_URL, {
           method:'POST',
+          headers:{ 'Content-Type':'application/json' },
           body: JSON.stringify({ mode:'update', rowId: removed.ticket.rowId, updates: { Time: timeStr } })
         });
       }catch(e){ /* silent */ }
@@ -556,14 +580,13 @@ async function showAdmin(){
   document.getElementById('orders-screen').style.display='none';
   document.getElementById('admin-screen').style.display='block';
 
-  const loading=document.getElementById('admin-loading');
-  const select=document.getElementById('dateSelect');
   showOverlay(true);
-  loading.style.display='block';
   try{
     const res=await fetch(`${API_URL}?mode=list`,{cache:'no-store'});
+    if(!res.ok) throw new Error('Admin list fetch failed');
     allSales = await res.json();
     const dates = [...new Set(allSales.map(r=>r.Date))].filter(Boolean);
+    const select=document.getElementById('dateSelect');
     select.innerHTML='';
     if(dates.length===0){
       document.getElementById('totalBlock').innerHTML = "<strong>Total</strong><br>No data available yet.";
@@ -579,7 +602,6 @@ async function showAdmin(){
   }catch(e){
     alert('Error loading admin data.');
   }finally{
-    loading.style.display='none';
     showOverlay(false);
   }
 }
@@ -591,9 +613,11 @@ function setAdminCardsEmpty(){
   document.getElementById('sdMoney').textContent = 'Money: $0';
   document.getElementById('sdItems').textContent = 'Items: 0';
   document.getElementById('cashMoney').textContent = 'Money: $0';
-  document.getElementById('cashItems').textContent = '';
+  document.getElementById('cashItems').textContent = 'Items: 0';
   document.getElementById('cardMoney').textContent = 'Money: $0';
-  document.getElementById('cardItems').textContent = '';
+  document.getElementById('cardItems').textContent = 'Items: 0';
+  document.getElementById('totMoney').textContent = 'Money: $0';
+  document.getElementById('totItems').textContent = 'Items: 0';
 }
 function loadStats(){
   const date=document.getElementById('dateSelect').value;
@@ -602,29 +626,48 @@ function loadStats(){
     document.getElementById('totalBlock').innerHTML="<strong>Total</strong><br>No data for selected date.";
     setAdminCardsEmpty(); return;
   }
-  const s={total:0, burgerMoney:0, hotdogMoney:0, sodaMoney:0, burgerItems:0, hotdogItems:0, sodaItems:0, cash:0, card:0};
+  const s={
+    totalMoney:0, totalItems:0,
+    burgerMoney:0, burgerItems:0,
+    hotdogMoney:0, hotdogItems:0,
+    sodaMoney:0, sodaItems:0,
+    cashMoney:0, cashItems:0,
+    cardMoney:0, cardItems:0
+  };
   for(const o of data){
     const isComp = (String(o['Payment Method']).toLowerCase()==='n/a');
     const b=Number(o.Burger)||0, h=Number(o.Hotdog)||0, sd=Number(o.Soda)||0;
+    const itemsCount = b + h + sd;
     const subtotal = isComp ? 0 : b*prices.burger + h*prices.hotdog + sd*prices.soda;
-    s.total+=subtotal;
-    s.burgerMoney+= isComp?0:b*prices.burger; s.burgerItems+=b;
-    s.hotdogMoney+= isComp?0:h*prices.hotdog; s.hotdogItems+=h;
-    s.sodaMoney  += isComp?0:sd*prices.soda;  s.sodaItems  +=sd;
+
+    s.totalMoney += subtotal;
+    s.totalItems += itemsCount;
+
+    s.burgerMoney += isComp?0:b*prices.burger; s.burgerItems += b;
+    s.hotdogMoney += isComp?0:h*prices.hotdog; s.hotdogItems += h;
+    s.sodaMoney   += isComp?0:sd*prices.soda;  s.sodaItems   += sd;
+
     if(!isComp){
-      if(String(o['Payment Method']).toLowerCase()==='cash') s.cash+=subtotal;
-      if(String(o['Payment Method']).toLowerCase()==='card') s.card+=subtotal;
+      if(String(o['Payment Method']).toLowerCase()==='cash'){
+        s.cashMoney += subtotal; s.cashItems += itemsCount;
+      }else if(String(o['Payment Method']).toLowerCase()==='card'){
+        s.cardMoney += subtotal; s.cardItems += itemsCount;
+      }
     }
   }
-  document.getElementById('totalBlock').innerHTML = `<strong>Total</strong><br>Money: $${s.total}`;
-  document.getElementById('bgMoney').textContent = `Money: $${s.burgerMoney}`;
-  document.getElementById('bgItems').textContent = `Items: ${s.burgerItems}`;
-  document.getElementById('hdMoney').textContent = `Money: $${s.hotdogMoney}`;
-  document.getElementById('hdItems').textContent = `Items: ${s.hotdogItems}`;
-  document.getElementById('sdMoney').textContent = `Money: $${s.sodaMoney}`;
-  document.getElementById('sdItems').textContent = `Items: ${s.sodaItems}`;
-  document.getElementById('cashMoney').textContent = `Money: $${s.cash}`;
-  document.getElementById('cardMoney').textContent = `Money: $${s.card}`;
+  document.getElementById('totalBlock').innerHTML = `<strong>Summary for Selected Date</strong>`;
+  document.getElementById('bgMoney').textContent   = `Money: $${s.burgerMoney}`;
+  document.getElementById('bgItems').textContent   = `Items: ${s.burgerItems}`;
+  document.getElementById('hdMoney').textContent   = `Money: $${s.hotdogMoney}`;
+  document.getElementById('hdItems').textContent   = `Items: ${s.hotdogItems}`;
+  document.getElementById('sdMoney').textContent   = `Money: $${s.sodaMoney}`;
+  document.getElementById('sdItems').textContent   = `Items: ${s.sodaItems}`;
+  document.getElementById('cashMoney').textContent = `Money: $${s.cashMoney}`;
+  document.getElementById('cashItems').textContent = `Items: ${s.cashItems}`;
+  document.getElementById('cardMoney').textContent = `Money: $${s.cardMoney}`;
+  document.getElementById('cardItems').textContent = `Items: ${s.cardItems}`;
+  document.getElementById('totMoney').textContent  = `Money: $${s.totalMoney}`;
+  document.getElementById('totItems').textContent  = `Items: ${s.totalItems}`;
 }
 
 /* ===== Sheet Modal (Editable Grid) ===== */
@@ -635,6 +678,7 @@ async function loadSheetIntoGrid(){
   const tbl=document.getElementById('sheetTable'); tbl.innerHTML='';
   try{
     const res = await fetch(`${API_URL}?mode=sheet`, {cache:'no-store'});
+    if(!res.ok) throw new Error('sheet fetch failed');
     const data = await res.json(); // 2D array including header
     if(!Array.isArray(data) || data.length===0){ tbl.innerHTML='<tr><td>No data</td></tr>'; return; }
     // header
@@ -694,7 +738,8 @@ async function saveGrid(){
   const values = [headers.slice(0, headers.length-1), ...bodyRows]; // exclude 'Actions' header/col
   showOverlay(true);
   try{
-    await fetch(API_URL, { method:'POST', body: JSON.stringify({ mode:'replace', values }) });
+    const res = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ mode:'replace', values }) });
+    if(!res.ok) throw new Error('save failed');
     alert('Sheet saved.');
   }catch(e){
     alert('Failed to save sheet.');
