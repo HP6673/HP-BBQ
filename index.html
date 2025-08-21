@@ -25,7 +25,7 @@
   html,body{height:100%}
   body{
     margin:0 auto;
-    max-width:720px; min-width:720px;
+    max-width:720px; min-width:720px; /* force desktop layout on phones */
     background:var(--bg); color:var(--text);
     font-family:Arial, Helvetica, sans-serif;
     font-size:var(--font); line-height:1.35;
@@ -37,6 +37,8 @@
   h1{font-size:26px}
   h2{font-size:22px}
   h3{font-size:20px}
+
+  .brand{margin:2px 0 14px; font-weight:800; font-size:26px; letter-spacing:.3px}
 
   /* Cards */
   .card{
@@ -60,6 +62,7 @@
   }
   button:hover{filter:brightness(.98)}
   button:active{transform:translateY(1px)}
+  button:disabled{opacity:.6; cursor:not-allowed}
   .btn-row{display:flex; gap:14px; flex-wrap:wrap; justify-content:center}
   .btn-full{width:100%}
   .selected{background:#000; color:#fff; border-color:#000}
@@ -104,7 +107,7 @@
   }
   .overlay-card h2{font-size:28px; margin-bottom:8px}
 
-  /* Orders */
+  /* ORDERS */
   .orders-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
   .orders-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
   .ticket{border:2px solid #000; background:#fff; border-radius:0; padding:14px; text-align:left}
@@ -144,14 +147,47 @@
   }
   table.sheet th{background:#f1f1f1; position:sticky; top:0; z-index:1; font-weight:800}
   td[contenteditable="true"]{background:#fff}
-  .row-controls{display:flex; gap:6px; justify-content:center}
-  .link-btn{display:inline-block; padding:10px 12px; border:2px solid #000; background:#fff; color:#000; text-decoration:none; border-radius:0}
-  .brand{margin:2px 0 14px; font-weight:800; font-size:26px; letter-spacing:.3px}
+
+  /* Access Gate (numeric keypad) */
+  #gate{
+    position:fixed; inset:0; background:#fff; z-index:10000;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  #gate .panel{
+    width:100%; max-width:360px;
+    border:3px solid #000; border-radius:0; padding:18px; text-align:center; background:#fff;
+  }
+  .code-dots{display:flex; justify-content:center; gap:10px; margin:10px 0 14px}
+  .dot{width:16px; height:16px; border-radius:50%; border:3px solid #000; background:transparent}
+  .dot.filled{background:#000}
+  .keypad{display:grid; grid-template-columns:repeat(3, 1fr); gap:10px}
+  .keypad button{padding:16px 0; font-size:20px; border:3px solid #000; border-radius:0; background:#fff; cursor:pointer}
+  .key-wide{grid-column:span 2}
+  #gate .err{color:#c00; min-height:1.3em; margin-top:10px}
 </style>
 </head>
 <body>
 
-<!-- Overlay -->
+<!-- Access Gate (requires code 5253 each load/refresh) -->
+<div id="gate" aria-modal="true" role="dialog">
+  <div class="panel" aria-label="Enter Access Code">
+    <h2>Enter Access Code</h2>
+    <div class="code-dots" aria-hidden="true">
+      <div class="dot" id="dot0"></div><div class="dot" id="dot1"></div>
+      <div class="dot" id="dot2"></div><div class="dot" id="dot3"></div>
+    </div>
+    <div class="keypad">
+      <button onclick="pressKey('1')">1</button><button onclick="pressKey('2')">2</button><button onclick="pressKey('3')">3</button>
+      <button onclick="pressKey('4')">4</button><button onclick="pressKey('5')">5</button><button onclick="pressKey('6')">6</button>
+      <button onclick="pressKey('7')">7</button><button onclick="pressKey('8')">8</button><button onclick="pressKey('9')">9</button>
+      <button onclick="clearCode()" class="key-wide">Clear</button><button onclick="pressKey('0')">0</button><button onclick="backspace()">⌫</button>
+      <button onclick="unlock()" class="key-wide">Enter</button>
+    </div>
+    <div class="err" id="gateErr" aria-live="polite"></div>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
 <div id="overlay"><div class="overlay-card"><h2>Loading…</h2><div>Please wait</div></div></div>
 
 <!-- ===== MAIN ===== -->
@@ -210,7 +246,7 @@
     </div>
   </div>
 
-  <!-- Order Date (kept) -->
+  <!-- Order Date -->
   <div class="card">
     <h2>Order Date</h2>
     <input type="date" id="orderDate" />
@@ -231,7 +267,7 @@
 </div>
 
 <!-- ===== ORDERS ===== -->
-<div id="orders-screen">
+<div id="orders-screen" style="display:none">
   <div class="orders-header">
     <h1>Open Orders</h1>
     <div class="btn-row"><button onclick="showMain()">Back to Home</button></div>
@@ -241,12 +277,12 @@
 </div>
 
 <!-- ===== ADMIN ===== -->
-<div id="admin-screen">
+<div id="admin-screen" style="display:none">
   <div class="card" style="text-align:center;">
     <h1>Admin Panel</h1>
     <div class="btn-row" style="margin:8px 0 14px">
-      <a class="link-btn" href="https://drive.google.com/drive/folders/1eZPlupv0k_2W8foDiN2PhuQwjjIoMJz6?usp=sharing" target="_blank">Files (Drive Folder)</a>
-      <button onclick="openSheetModal()">View Sheet (Editable)</button>
+      <a class="btn-full" style="text-decoration:none; text-align:center" href="https://drive.google.com/drive/folders/1eZPlupv0k_2W8foDiN2PhuQwjjIoMJz6?usp=sharing" target="_blank">Files (Drive Folder)</a>
+      <button class="btn-full" onclick="openSheetModal()">View Sheet (Editable)</button>
     </div>
     <div class="kv">
       <label for="dateSelect"><strong>Date:</strong></label>
@@ -272,7 +308,7 @@
   </div>
 </div>
 
-<!-- ===== Sheet Modal (Editable Grid) ===== -->
+<!-- Sheet Modal -->
 <div id="sheet-modal">
   <div class="sheet-window">
     <div class="sheet-head">
@@ -300,24 +336,36 @@
 
 <script>
 /* ===== CONFIG ===== */
-const API_URL = "REPLACE_WITH_YOUR_DEPLOYED_APPS_SCRIPT_WEB_APP_URL";
+const API_URL = "https://script.google.com/macros/s/AKfycbwb_KZrwBErcWTsvnERHS33q0xXggrP1ymF_uxkH0dHiyxoY_nwZv2H4RsHcJfQAcY3/exec";
+const ACCESS_CODE = "5253";
 const prices = { burger:7, hotdog:5, soda:1 };
 
+/* ===== ACCESS GATE ===== */
+let gateBuffer = "";
+function updateDots(){ for(let i=0;i<4;i++){ const d=document.getElementById("dot"+i); if(d) d.classList.toggle("filled", i < gateBuffer.length); } }
+function pressKey(d){ if(gateBuffer.length>=4) return; gateBuffer+=d; updateDots(); document.getElementById("gateErr").textContent=""; if(gateBuffer.length===4) unlock(); }
+function backspace(){ if(!gateBuffer) return; gateBuffer=gateBuffer.slice(0,-1); updateDots(); }
+function clearCode(){ gateBuffer=""; updateDots(); document.getElementById("gateErr").textContent=""; }
+function unlock(){
+  if(gateBuffer===ACCESS_CODE){
+    document.getElementById("gate").style.display="none";
+    const od=document.getElementById("orderDate"); if(od && !od.value) od.value=todayStr();
+  }else{ document.getElementById("gateErr").textContent="Invalid code."; clearCode(); }
+}
+window.addEventListener("keydown",(e)=>{
+  if(document.getElementById("gate").style.display!=="none"){
+    if(e.key>="0"&&e.key<="9") pressKey(e.key);
+    else if(e.key==="Backspace") backspace();
+    else if(e.key.toLowerCase()==="c") clearCode();
+    else if(e.key==="Enter") unlock();
+  }
+});
+
 /* ===== UTIL ===== */
-function showOverlay(on=true){
-  document.getElementById('overlay').style.display = on ? 'flex' : 'none';
-}
-function todayStr(d=new Date()){
-  const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;
-}
-function fmtTimer(ms){
-  const s=Math.floor(ms/1000), m=Math.floor(s/60), sec=s%60;
-  return `${m}:${String(sec).padStart(2,'0')}`;
-}
-function timerClass(ms){
-  const s=ms/1000; if(s<60) return 'green'; if(s<180) return 'orange'; return 'red';
-}
+function showOverlay(on=true){ document.getElementById('overlay').style.display = on ? 'flex' : 'none'; }
+function todayStr(d=new Date()){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+function fmtTimer(ms){ const s=Math.floor(ms/1000), m=Math.floor(s/60), sec=s%60; return `${m}:${String(sec).padStart(2,'0')}`; }
+function timerClass(ms){ const s=ms/1000; if(s<60) return 'green'; if(s<180) return 'orange'; return 'red'; }
 
 /* ===== STATE ===== */
 let qty = { burger:0, hotdog:0, soda:0 };
@@ -325,15 +373,12 @@ let compOrder=false;
 let selectedPayment=null;
 let allSales=[];
 let orders=[];           // {id,rowId,ts,dateStr,burger,hotdog,soda,total,comp}
-let removed = null;      // {ticket, index, startedAt, timer}
-let undoTimer=null;      // snackbar timer
-let timerInterval=null;  // orders timer loop
+let removed = null;
+let undoTimer=null;
+let timerInterval=null;
 
 /* ===== MAIN (POS) ===== */
-window.addEventListener('load', ()=>{
-  const od=document.getElementById('orderDate'); if(od) od.value=todayStr();
-  renderPOS();
-});
+window.addEventListener('load', ()=>{ const od=document.getElementById('orderDate'); if(od) od.value=todayStr(); renderPOS(); });
 
 function changeQty(item,delta){ qty[item]=Math.max(0, qty[item]+delta); renderPOS(); }
 function toggleComp(){ compOrder=!compOrder; renderPOS(); }
@@ -354,7 +399,9 @@ function renderPOS(){
 
 async function submitOrder(){
   if(qty.burger===0 && qty.hotdog===0 && qty.soda===0){ alert('No items selected'); return; }
-  if(!selectedPayment){ alert('Select a payment method'); return; }
+  // FIX: payment is required only if NOT comp
+  if(!compOrder && !selectedPayment){ alert('Select a payment method'); return; }
+
   const btn=document.getElementById('submitBtn');
   btn.textContent='Loading…'; btn.disabled=true; showOverlay(true);
 
@@ -373,13 +420,13 @@ async function submitOrder(){
         Soda: qty.soda,
         'Payment Method': payment,
         Total: total,
-        Time: '' // filled when completed
+        Time: '' // set on completion
       })
     });
     const data = await res.json();
     const rowId = data && data.rowId ? data.rowId : null;
 
-    // create ticket
+    // Create ticket
     const ticket = {
       id:`t_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
       rowId,
@@ -389,7 +436,8 @@ async function submitOrder(){
       total, comp:compOrder
     };
     orders.push(ticket);
-    // reset POS
+
+    // Reset
     qty={burger:0, hotdog:0, soda:0}; compOrder=false; selectedPayment=null;
     document.getElementById('cashBtn').classList.remove('selected');
     document.getElementById('cardBtn').classList.remove('selected');
@@ -468,7 +516,7 @@ function removeTicket(id){
   orders.splice(idx,1);
   renderOrders();
 
-  removed = { ticket, index: idx, startedAt: Date.now(), timer: null };
+  removed = { ticket, index: idx };
   // show undo bar
   const bar=document.getElementById('undoBar'), prog=document.getElementById('undoProgress');
   prog.style.transition='none'; prog.style.width='100%'; void prog.offsetWidth;
@@ -477,16 +525,16 @@ function removeTicket(id){
 
   if(undoTimer) clearTimeout(undoTimer);
   undoTimer=setTimeout(async ()=>{
-    // commit Time to sheet (only if we still have removed)
+    // commit Time to sheet (only if not undone)
     if(removed && removed.ticket && removed.ticket.rowId){
       const elapsedMs = Date.now() - removed.ticket.ts;
       const timeStr = fmtTimer(elapsedMs);
       try{
-        await fetch(`${API_URL}?rowId=${encodeURIComponent(removed.ticket.rowId)}`, {
-          method:'PUT',
-          body: JSON.stringify({ Time: timeStr })
+        await fetch(API_URL, {
+          method:'POST',
+          body: JSON.stringify({ mode:'update', rowId: removed.ticket.rowId, updates: { Time: timeStr } })
         });
-      }catch(e){ /* silent; prevent UI block */ }
+      }catch(e){ /* silent */ }
     }
     document.getElementById('undoBar').style.display='none';
     removed=null;
@@ -494,7 +542,6 @@ function removeTicket(id){
 }
 function undoRemove(){
   if(!removed) return;
-  // restore ticket
   const {ticket,index}=removed;
   orders.splice(Math.min(index,orders.length),0,ticket);
   removed=null;
@@ -565,8 +612,8 @@ function loadStats(){
     s.hotdogMoney+= isComp?0:h*prices.hotdog; s.hotdogItems+=h;
     s.sodaMoney  += isComp?0:sd*prices.soda;  s.sodaItems  +=sd;
     if(!isComp){
-      if(o['Payment Method']==='cash') s.cash+=subtotal;
-      if(o['Payment Method']==='card') s.card+=subtotal;
+      if(String(o['Payment Method']).toLowerCase()==='cash') s.cash+=subtotal;
+      if(String(o['Payment Method']).toLowerCase()==='card') s.card+=subtotal;
     }
   }
   document.getElementById('totalBlock').innerHTML = `<strong>Total</strong><br>Money: $${s.total}`;
@@ -611,18 +658,13 @@ async function loadSheetIntoGrid(){
         tr.appendChild(td);
       }
       const ctrl=document.createElement('td');
-      ctrl.className='row-controls';
       const del=document.createElement('button'); del.textContent='Delete'; del.onclick=()=>{ tr.remove(); };
-      ctrl.appendChild(del);
-      tr.appendChild(ctrl);
-      tbody.appendChild(tr);
+      ctrl.appendChild(del); tr.appendChild(ctrl); tbody.appendChild(tr);
     }
-    // add an empty row if only header exists
     if(data.length===1){
       const tr=document.createElement('tr');
       headers.forEach(()=>{ const td=document.createElement('td'); td.contentEditable=true; tr.appendChild(td); });
-      const ctrl=document.createElement('td'); ctrl.className='row-controls';
-      const del=document.createElement('button'); del.textContent='Delete'; del.onclick=()=>{ tr.remove(); };
+      const ctrl=document.createElement('td'); const del=document.createElement('button'); del.textContent='Delete'; del.onclick=()=>{ tr.remove(); };
       ctrl.appendChild(del); tr.appendChild(ctrl); tbody.appendChild(tr);
     }
     tbl.appendChild(tbody);
@@ -639,8 +681,7 @@ function addRow(){
   for(let c=0;c<headers.length-1;c++){ // exclude Actions
     const td=document.createElement('td'); td.contentEditable=true; tr.appendChild(td);
   }
-  const ctrl=document.createElement('td'); ctrl.className='row-controls';
-  const del=document.createElement('button'); del.textContent='Delete'; del.onclick=()=>{ tr.remove(); };
+  const ctrl=document.createElement('td'); const del=document.createElement('button'); del.textContent='Delete'; del.onclick=()=>{ tr.remove(); };
   ctrl.appendChild(del); tr.appendChild(ctrl);
   tbl.querySelector('tbody').appendChild(tr);
 }
@@ -650,11 +691,10 @@ async function saveGrid(){
   const bodyRows = Array.from(tbl.querySelectorAll('tbody tr')).map(tr=>{
     return Array.from(tr.querySelectorAll('td')).slice(0, headers.length-1).map(td=>td.textContent.trim());
   });
-  // Push entire sheet back (header + body)
   const values = [headers.slice(0, headers.length-1), ...bodyRows]; // exclude 'Actions' header/col
   showOverlay(true);
   try{
-    await fetch(`${API_URL}?mode=replace`, { method:'PUT', body: JSON.stringify({ values }) });
+    await fetch(API_URL, { method:'POST', body: JSON.stringify({ mode:'replace', values }) });
     alert('Sheet saved.');
   }catch(e){
     alert('Failed to save sheet.');
@@ -665,4 +705,3 @@ async function saveGrid(){
 </script>
 </body>
 </html>
-
