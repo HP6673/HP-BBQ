@@ -5,338 +5,249 @@
 <title>HP BBQ — Cash Register</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 <style>
-  :root {
-    --card-pad: 14px;
-    --card-radius: 12px;
-    --gap: 14px;
-    --font-size: 18px;
-    --btn-pad: 12px 14px;
-    --accent: #000;
-    --border: #ddd;
+  :root{
+    --bg:#ffffff;
+    --text:#000000;
+    --accent:#000000;
+    --muted:#f6f6f6;
+    --border:#000000;
+    --border2:#222222;
+    --line:#000000;
+    --danger:#c00000;
+    --ok:#0a8f08;
+    --warn:#d97900;
+    --shadow:0 10px 20px rgba(0,0,0,0.18);
+    --pad:14px;
+    --radius:0px; /* sharp edges */
+    --font:18px;
   }
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body {
-    font-family: Arial, Helvetica, sans-serif;
-    margin: 0 auto;
-    max-width: 720px;      /* Force desktop layout width */
-    min-width: 720px;      /* Keep desktop layout on mobile (may scroll) */
-    padding: 20px;
-    text-align: center;
-    font-size: var(--font-size);
-    line-height: 1.35;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-    background: #fff;
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0 auto;
+    max-width:720px; min-width:720px;
+    background:var(--bg); color:var(--text);
+    font-family:Arial, Helvetica, sans-serif;
+    font-size:var(--font); line-height:1.35;
+    padding:20px; text-align:center;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
   }
+  h1,h2,h3{margin:0 0 10px 0; font-weight:800; letter-spacing:.3px}
+  h1{font-size:26px}
+  h2{font-size:22px}
+  h3{font-size:20px}
 
-  /* Brand heading */
-  .brand {
-    margin: 6px 0 14px;
-    font-weight: bold;
-    letter-spacing: 1px;
+  /* Cards */
+  .card{
+    border:2px solid var(--border);
+    border-radius:var(--radius);
+    padding:var(--pad);
+    background:#fff;
+    text-align:left;
+    box-shadow:none;
+    margin-bottom:14px;
   }
-
-  /* Grid + Card (shared) — always 2 columns (desktop layout) */
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--gap);
-    align-items: stretch;
-  }
-  .card {
-    border: 1px solid var(--border);
-    border-radius: var(--card-radius);
-    padding: var(--card-pad);
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 160px;
-    background: #fff;
-  }
-  .card h3 {
-    margin: 0 0 8px;
-    font-weight: bold;
-    text-align: center;
-  }
-  .kv { margin: 4px 0; }
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .kv{margin:4px 0}
+  .line{height:2px; background:var(--line); opacity:.12; margin:8px 0}
 
   /* Buttons */
-  button {
-    padding: var(--btn-pad);
-    font-size: var(--font-size);
-    border-radius: 10px;
-    border: 1px solid #ccc;
-    background: #f7f7f7;
-    cursor: pointer;
-    will-change: transform;
+  button{
+    padding:12px 14px; font-size:var(--font);
+    border:2px solid var(--border); background:#fff; color:#000;
+    border-radius:var(--radius); cursor:pointer;
   }
-  button:active { transform: translateY(1px); }
-  button:disabled { opacity: 0.6; cursor: not-allowed; }
-  .btn-row {
-    display: flex;
-    gap: var(--gap);
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  .btn-full { width: 100%; }
-  .selected { background: var(--accent); color: #fff; border-color: var(--accent); }
+  button:hover{filter:brightness(.98)}
+  button:active{transform:translateY(1px)}
+  .btn-row{display:flex; gap:14px; flex-wrap:wrap; justify-content:center}
+  .btn-full{width:100%}
+  .selected{background:#000; color:#fff; border-color:#000}
 
   /* Inputs */
-  input[type="date"], select {
-    padding: var(--btn-pad);
-    font-size: var(--font-size);
-    border-radius: 10px;
-    border: 1px solid #ccc;
-    width: 100%;
-    background: #fff;
+  input[type="date"], select, input[type="text"], input[type="number"]{
+    width:100%; padding:12px 14px; font-size:var(--font);
+    border:2px solid var(--border); border-radius:var(--radius);
+    background:#fff;
   }
 
-  /* Quantity rows in Items card */
-  .item-row {
-    display: grid;
-    grid-template-columns: 1fr auto auto auto;
-    align-items: center;
-    gap: 10px;
-    padding: 6px 0;
-    border-bottom: 1px dashed #e6e6e6;
+  /* Menu rows */
+  .item-row{
+    display:grid; grid-template-columns:1fr auto auto auto;
+    align-items:center; gap:10px; padding:6px 0;
+    border-bottom:2px solid var(--border2);
   }
-  .item-row:last-child { border-bottom: none; }
-  .item-name { text-align: left; }
-  .price { text-align: center; min-width: 50px; }
-  .qty-controls {
-    display: grid;
-    grid-template-columns: auto 50px auto;
-    align-items: center;
-    justify-items: center;
-    gap: 8px;
-  }
-  .qty-badge {
-    display: inline-block;
-    min-width: 44px;
-    text-align: center;
-    padding: 6px 8px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: #fff;
+  .item-row:last-child{border-bottom:none}
+  .price{text-align:center; min-width:50px}
+  .qty-controls{display:grid; grid-template-columns:auto 60px auto; gap:8px; align-items:center; justify-items:center}
+  .qty-badge{
+    display:inline-block; min-width:56px; text-align:center; padding:6px 8px;
+    border:2px solid var(--border); background:#fff; border-radius:var(--radius);
+    font-variant-numeric:tabular-nums;
   }
 
-  /* Totals / Comp Color */
-  .highlight { color: #c00; font-weight: bold; }
+  /* Color cues */
+  .highlight{color:var(--danger); font-weight:800}
 
-  /* Screens (toggle) */
-  #admin-screen, #orders-screen { display: none; }
+  /* Screens */
+  #admin-screen,#orders-screen,#sheet-modal{display:none}
 
-  /* Admin loading */
-  #admin-loading { display: none; font-style: italic; margin: 8px 0; }
-  #admin-content { display: none; }
+  /* Loading Overlay */
+  #overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.55);
+    display:none; align-items:center; justify-content:center; z-index:9998;
+  }
+  .overlay-card{
+    background:#fff; color:#000; border:3px solid #000; border-radius:0;
+    padding:24px 28px; text-align:center; box-shadow:var(--shadow);
+    min-width:280px;
+  }
+  .overlay-card h2{font-size:28px; margin-bottom:8px}
 
-  /* Access Gate (numeric keypad) — required on every load/refresh */
-  #gate {
-    position: fixed; inset: 0; background: #fff; z-index: 9999;
-    display: flex; align-items: center; justify-content: center;
-    padding: 24px;
-  }
-  #gate .panel {
-    width: 100%; max-width: 360px;
-    border: 1px solid var(--border); border-radius: var(--card-radius);
-    padding: 18px; text-align: center; background: #fff;
-  }
-  .code-dots { display: flex; justify-content: center; gap: 10px; margin: 10px 0 14px; }
-  .dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #999; background: transparent; }
-  .dot.filled { background: #000; border-color: #000; }
-  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .keypad button { padding: 16px 0; font-size: 20px; border-radius: 10px; border: 1px solid #ccc; background: #f7f7f7; cursor: pointer; }
-  .key-wide { grid-column: span 2; }
-  #gate .err { color: #c00; min-height: 1.3em; margin-top: 10px; }
+  /* Orders */
+  .orders-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
+  .orders-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  .ticket{border:2px solid #000; background:#fff; border-radius:0; padding:14px; text-align:left}
+  .ticket-head{display:flex; justify-content:space-between; border-bottom:2px solid #222; padding-bottom:6px; margin-bottom:6px}
+  .ticket-items{white-space:pre-line}
+  .ticket-footer{display:flex; justify-content:space-between; border-top:2px solid #222; padding-top:6px; margin-top:6px}
+  .timer{font-weight:800}
+  .timer.green{color:var(--ok)}
+  .timer.orange{color:var(--warn)}
+  .timer.red{color:var(--danger)}
+  .done-btn{background:#000; color:#fff; border-color:#000}
 
-  /* Toast (non-blocking messages) */
-  #toast {
-    position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
-    background: rgba(0,0,0,0.9); color: #fff; padding: 10px 14px; border-radius: 8px;
-    display: none; z-index: 9998;
+  /* Undo snackbar */
+  #undoBar{
+    position:fixed; right:20px; bottom:20px; z-index:9997; display:none;
+    min-width:280px; background:#111; color:#fff; border:2px solid #000; border-radius:0;
+    box-shadow:var(--shadow);
   }
+  #undoBar .content{padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px}
+  #undoBar button{background:#fff; color:#000; border:2px solid #000}
+  #undoProgress{height:6px; background:#4caf50; width:100%; transition:width linear}
 
-  /* ORDERS PAGE */
-  .orders-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: var(--gap);
+  /* Admin grid viewer */
+  #sheet-modal{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:9999; background:rgba(0,0,0,0.55)}
+  .sheet-window{
+    background:#fff; border:3px solid #000; border-radius:0; width:90%; max-width:900px; max-height:80vh; display:flex; flex-direction:column;
   }
-  .orders-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;   /* match 2-col desktop style */
-    gap: var(--gap);
+  .sheet-head{display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:3px solid #000}
+  .sheet-title{font-weight:800; font-size:20px}
+  .sheet-actions{display:flex; gap:10px}
+  .sheet-body{overflow:auto}
+  table.sheet{
+    width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums;
   }
-  .ticket {
-    border: 1px solid var(--border);
-    border-radius: var(--card-radius);
-    padding: var(--card-pad);
-    background: #fff;
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  table.sheet th, table.sheet td{
+    border:2px solid #000; padding:8px 10px; text-align:center;
   }
-  .ticket-head {
-    display: flex; justify-content: space-between; align-items: center;
-    border-bottom: 1px dashed #e6e6e6; padding-bottom: 6px;
-  }
-  .ticket-items {
-    white-space: pre-line;   /* show each item on its own line */
-    font-variant-numeric: tabular-nums;
-  }
-  .ticket-footer {
-    display: flex; justify-content: space-between; align-items: center;
-    border-top: 1px dashed #e6e6e6; padding-top: 6px; margin-top: 4px;
-  }
-  .timer { font-weight: bold; }
-  .timer.green  { color: #0a8f08; }  /* 0–1 min */
-  .timer.orange { color: #d97900; }  /* 1–3 min */
-  .timer.red    { color: #c00; }     /* 3+ min */
-  .done-btn { background: #111; color: #fff; border-color: #111; }
-
-  /* Undo snackbar (bottom-right) */
-  #undoBar {
-    position: fixed; right: 20px; bottom: 20px; z-index: 9997;
-    display: none; min-width: 260px;
-    background: #222; color: #fff; border-radius: 10px; overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-  }
-  #undoBar .content {
-    padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  }
-  #undoBar button {
-    background: #fff; color: #111; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer;
-  }
-  #undoProgress {
-    height: 4px; background: #4caf50; width: 100%;
-    transition: width linear;
-  }
+  table.sheet th{background:#f1f1f1; position:sticky; top:0; z-index:1; font-weight:800}
+  td[contenteditable="true"]{background:#fff}
+  .row-controls{display:flex; gap:6px; justify-content:center}
+  .link-btn{display:inline-block; padding:10px 12px; border:2px solid #000; background:#fff; color:#000; text-decoration:none; border-radius:0}
+  .brand{margin:2px 0 14px; font-weight:800; font-size:26px; letter-spacing:.3px}
 </style>
 </head>
 <body>
 
-<!-- ===== ACCESS GATE (keypad; code 5253; REQUIRED every load/refresh) ===== -->
-<div id="gate" aria-modal="true" role="dialog">
-  <div class="panel" aria-label="Enter Access Code">
-    <h3>Enter Access Code</h3>
-    <div class="code-dots" aria-hidden="true">
-      <div class="dot" id="dot0"></div>
-      <div class="dot" id="dot1"></div>
-      <div class="dot" id="dot2"></div>
-      <div class="dot" id="dot3"></div>
-    </div>
-    <div class="keypad">
-      <button onclick="pressKey('1')">1</button>
-      <button onclick="pressKey('2')">2</button>
-      <button onclick="pressKey('3')">3</button>
-      <button onclick="pressKey('4')">4</button>
-      <button onclick="pressKey('5')">5</button>
-      <button onclick="pressKey('6')">6</button>
-      <button onclick="pressKey('7')">7</button>
-      <button onclick="pressKey('8')">8</button>
-      <button onclick="pressKey('9')">9</button>
-      <button onclick="clearCode()" class="key-wide">Clear</button>
-      <button onclick="pressKey('0')">0</button>
-      <button onclick="backspace()">⌫</button>
-      <button onclick="unlock()" class="key-wide">Enter</button>
-    </div>
-    <div class="err" id="gateErr" aria-live="polite"></div>
-  </div>
-</div>
+<!-- Overlay -->
+<div id="overlay"><div class="overlay-card"><h2>Loading…</h2><div>Please wait</div></div></div>
 
-<!-- Non-blocking toast -->
-<div id="toast"></div>
-
-<!-- ===== MAIN (POS) ===== -->
+<!-- ===== MAIN ===== -->
 <div id="main-screen">
   <div class="brand">HP BBQ</div>
 
-  <div class="grid" style="margin-bottom: var(--gap)">
-    <!-- Items -->
+  <div class="grid">
+    <!-- Menu -->
     <div class="card">
-      <h3>Items</h3>
-      <div class="item-row" aria-label="Burger">
+      <h2>Menu</h2>
+      <div class="item-row">
         <div class="item-name">Burger</div>
         <div class="price">$7</div>
         <div class="qty-controls">
-          <button onclick="changeQty('burger',1)" aria-label="Add Burger">+</button>
-          <span id="burgerQty" class="qty-badge" aria-live="polite">0</span>
-          <button onclick="changeQty('burger',-1)" aria-label="Remove Burger">-</button>
+          <button onclick="changeQty('burger',1)">+</button>
+          <span id="burgerQty" class="qty-badge">0</span>
+          <button onclick="changeQty('burger',-1)">-</button>
         </div>
       </div>
-      <div class="item-row" aria-label="Hot Dog">
+      <div class="item-row">
         <div class="item-name">Hot Dog</div>
         <div class="price">$5</div>
         <div class="qty-controls">
-          <button onclick="changeQty('hotdog',1)" aria-label="Add Hot Dog">+</button>
-          <span id="hotdogQty" class="qty-badge" aria-live="polite">0</span>
-          <button onclick="changeQty('hotdog',-1)" aria-label="Remove Hot Dog">-</button>
+          <button onclick="changeQty('hotdog',1)">+</button>
+          <span id="hotdogQty" class="qty-badge">0</span>
+          <button onclick="changeQty('hotdog',-1)">-</button>
         </div>
       </div>
+      <div class="item-row">
+        <div class="item-name">Soda</div>
+        <div class="price">$1</div>
+        <div class="qty-controls">
+          <button onclick="changeQty('soda',1)">+</button>
+          <span id="sodaQty" class="qty-badge">0</span>
+          <button onclick="changeQty('soda',-1)">-</button>
+        </div>
+      </div>
+      <div class="line"></div>
+      <div class="kv" style="text-align:center;"><strong>Total:</strong> $<span id="total">0</span></div>
     </div>
 
-    <!-- Payment -->
+    <!-- Payment (with Comp) -->
     <div class="card">
-      <h3>Payment</h3>
-      <div class="btn-row" style="margin-top: 6px;">
+      <h2>Payment</h2>
+      <div class="btn-row">
         <button id="cashBtn" class="btn-full" onclick="selectPayment('cash')">Cash</button>
         <button id="cardBtn" class="btn-full" onclick="selectPayment('card')">Card</button>
       </div>
-      <div class="kv" style="text-align:center;margin-top:8px">
-        Total: $<span id="total">0</span>
-      </div>
-    </div>
-
-    <!-- Actions -->
-    <div class="card">
-      <h3>Actions</h3>
-      <!-- Comp above Submit -->
-      <div class="btn-row" style="margin-top: 6px;">
+      <div class="line"></div>
+      <div class="btn-row">
         <button class="btn-full" onclick="toggleComp()">Comp Order</button>
       </div>
-      <div class="btn-row" style="margin-top: 8px;">
-        <button id="submitBtn" class="btn-full" onclick="submitOrder(event)">Submit Order</button>
-      </div>
-      <div class="btn-row" style="margin-top: 8px;">
-        <button class="btn-full" onclick="showOrders()">Orders</button>
-        <button class="btn-full" onclick="showAdmin()">Admin Panel</button>
-      </div>
-      <div class="kv" style="text-align:center;margin-top:8px">
-        <span id="compHint" aria-live="polite"></span>
+      <div class="kv" style="text-align:center; margin-top:6px">
+        <span id="compHint"></span>
       </div>
     </div>
+  </div>
 
-    <!-- Order Date -->
-    <div class="card">
-      <h3>Order Date</h3>
-      <div class="kv">
-        <input type="date" id="orderDate" />
-      </div>
-      <div class="kv" style="text-align:center; opacity:0.8;">
-        Defaults to today. Orders save with this date.
-      </div>
+  <!-- Order Date (kept) -->
+  <div class="card">
+    <h2>Order Date</h2>
+    <input type="date" id="orderDate" />
+    <div class="kv" style="text-align:center; opacity:.8;">Defaults to today. Orders save with this date.</div>
+  </div>
+
+  <!-- Actions -->
+  <div class="card">
+    <h2>Actions</h2>
+    <div class="btn-row">
+      <button id="submitBtn" class="btn-full" onclick="submitOrder()">Submit Order</button>
+    </div>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn-full" onclick="showOrders()">Orders</button>
+      <button class="btn-full" onclick="showAdmin()">Admin Panel</button>
     </div>
   </div>
 </div>
 
-<!-- ===== ORDERS PAGE ===== -->
+<!-- ===== ORDERS ===== -->
 <div id="orders-screen">
   <div class="orders-header">
-    <h3 style="margin:0">Open Orders</h3>
-    <div class="btn-row">
-      <button onclick="showMain()">Back to Home</button>
-    </div>
+    <h1>Open Orders</h1>
+    <div class="btn-row"><button onclick="showMain()">Back to Home</button></div>
   </div>
-
-  <div id="orders-empty" class="kv" style="display:none; text-align:center;">No open orders.</div>
+  <div id="orders-empty" class="kv" style="text-align:center; display:none;">No open orders.</div>
   <div id="orders-grid" class="orders-grid"></div>
 </div>
 
 <!-- ===== ADMIN ===== -->
 <div id="admin-screen">
-  <div class="card" style="text-align:center; margin-bottom: var(--gap);">
+  <div class="card" style="text-align:center;">
+    <h1>Admin Panel</h1>
+    <div class="btn-row" style="margin:8px 0 14px">
+      <a class="link-btn" href="https://drive.google.com/drive/folders/1eZPlupv0k_2W8foDiN2PhuQwjjIoMJz6?usp=sharing" target="_blank">Files (Drive Folder)</a>
+      <button onclick="openSheetModal()">View Sheet (Editable)</button>
+    </div>
     <div class="kv">
       <label for="dateSelect"><strong>Date:</strong></label>
       <select id="dateSelect" onchange="loadStats()"></select>
@@ -344,34 +255,36 @@
     <div id="totalBlock" class="kv" style="margin-top:8px;"></div>
   </div>
 
-  <div id="admin-loading" aria-live="polite">Loading admin data…</div>
+  <div id="admin-loading" class="kv" style="display:none; font-weight:800;">Loading…</div>
 
   <div id="admin-content">
     <div class="grid">
-      <div class="card">
-        <h3>Hot Dogs</h3>
-        <div class="kv" id="hdMoney"></div>
-        <div class="kv" id="hdItems"></div>
-      </div>
-      <div class="card">
-        <h3>Cash</h3>
-        <div class="kv" id="cashMoney"></div>
-        <div class="kv" id="cashItems"></div>
-      </div>
-      <div class="card">
-        <h3>Burger</h3>
-        <div class="kv" id="bgMoney"></div>
-        <div class="kv" id="bgItems"></div>
-      </div>
-      <div class="card">
-        <h3>Card</h3>
-        <div class="kv" id="cardMoney"></div>
-        <div class="kv" id="cardItems"></div>
-      </div>
+      <div class="card"><h3>Hot Dogs</h3><div id="hdMoney"></div><div id="hdItems"></div></div>
+      <div class="card"><h3>Cash</h3><div id="cashMoney"></div><div id="cashItems"></div></div>
+      <div class="card"><h3>Burger</h3><div id="bgMoney"></div><div id="bgItems"></div></div>
+      <div class="card"><h3>Card</h3><div id="cardMoney"></div><div id="cardItems"></div></div>
+      <div class="card"><h3>Soda</h3><div id="sdMoney"></div><div id="sdItems"></div></div>
     </div>
 
-    <div class="btn-row" style="margin-top: var(--gap);">
+    <div class="btn-row" style="margin-top:14px">
       <button class="btn-full" onclick="showMain()">Back to Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Sheet Modal (Editable Grid) ===== -->
+<div id="sheet-modal">
+  <div class="sheet-window">
+    <div class="sheet-head">
+      <div class="sheet-title">Sheet Viewer (Live)</div>
+      <div class="sheet-actions">
+        <button onclick="addRow()">Add Row</button>
+        <button onclick="saveGrid()">Save Grid</button>
+        <button onclick="closeSheetModal()">Close</button>
+      </div>
+    </div>
+    <div class="sheet-body">
+      <table id="sheetTable" class="sheet"></table>
     </div>
   </div>
 </div>
@@ -386,438 +299,370 @@
 </div>
 
 <script>
-/* ==== CONFIG ==== */
-const API_URL = "https://script.google.com/macros/s/AKfycbwb_KZrwBErcWTsvnERHS33q0xXggrP1ymF_uxkH0dHiyxoY_nwZv2H4RsHcJfQAcY3/exec";
-const ACCESS_CODE = "5253";
-const prices = { burger: 7, hotdog: 5 };
+/* ===== CONFIG ===== */
+const API_URL = "REPLACE_WITH_YOUR_DEPLOYED_APPS_SCRIPT_WEB_APP_URL";
+const prices = { burger:7, hotdog:5, soda:1 };
 
-/* ==== TOAST ==== */
-let toastTimer = null;
-function showToast(msg, ms=1500) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.display = 'block';
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(()=>{ t.style.display='none'; }, ms);
+/* ===== UTIL ===== */
+function showOverlay(on=true){
+  document.getElementById('overlay').style.display = on ? 'flex' : 'none';
 }
-
-/* ==== ACCESS GATE ==== */
-let gateBuffer = "";
-function updateDots() {
-  for (let i = 0; i < 4; i++) {
-    const d = document.getElementById("dot"+i);
-    if (d) d.classList.toggle("filled", i < gateBuffer.length);
-  }
+function todayStr(d=new Date()){
+  const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
 }
-function pressKey(digit) {
-  if (gateBuffer.length >= 4) return;
-  gateBuffer += digit;
-  updateDots();
-  document.getElementById("gateErr").textContent = "";
-  if (gateBuffer.length === 4) unlock(); // auto-enter
-}
-function backspace() {
-  if (!gateBuffer) return;
-  gateBuffer = gateBuffer.slice(0, -1);
-  updateDots();
-}
-function clearCode() {
-  gateBuffer = "";
-  updateDots();
-  document.getElementById("gateErr").textContent = "";
-}
-function unlock() {
-  if (gateBuffer === ACCESS_CODE) {
-    document.getElementById("gate").style.display = "none";
-    const od = document.getElementById("orderDate");
-    if (od && !od.value) od.value = todayStr();
-  } else {
-    document.getElementById("gateErr").textContent = "Invalid code.";
-    clearCode();
-  }
-}
-window.addEventListener("keydown", (e) => {
-  if (document.getElementById("gate").style.display !== "none") {
-    if (e.key >= "0" && e.key <= "9") { pressKey(e.key); }
-    else if (e.key === "Backspace") { backspace(); }
-    else if (e.key.toLowerCase() === "c") { clearCode(); }
-    else if (e.key === "Enter") { unlock(); }
-  }
-});
-window.addEventListener("load", () => {
-  const od = document.getElementById("orderDate");
-  if (od && !od.value) od.value = todayStr();
-  updateDots();
-});
-
-/* ==== STATE ==== */
-let qty = { burger: 0, hotdog: 0 };
-let compOrder = false;
-let selectedPayment = null;
-let allSales = [];
-
-/* Orders (tickets) state */
-let orders = [];                // {id, ts, dateStr, burger, hotdog, total, comp}
-let lastRemoved = null;         // {ticket, index}
-let undoTimer = null;
-let timerInterval = null;       // single interval to update all timers
-
-/* ==== UTIL ==== */
-function todayStr(d = new Date()) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,'0');
-  const day = String(d.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`; // YYYY-MM-DD
-}
-function fmtTimer(ms) {
-  const s = Math.floor(ms/1000);
-  const m = Math.floor(s/60);
-  const sec = s % 60;
+function fmtTimer(ms){
+  const s=Math.floor(ms/1000), m=Math.floor(s/60), sec=s%60;
   return `${m}:${String(sec).padStart(2,'0')}`;
 }
-function timerClass(ms) {
-  const s = ms/1000;
-  if (s < 60) return 'green';
-  if (s < 180) return 'orange';
-  return 'red';
+function timerClass(ms){
+  const s=ms/1000; if(s<60) return 'green'; if(s<180) return 'orange'; return 'red';
 }
 
-/* ==== POS LOGIC ==== */
-function changeQty(item, delta) {
-  qty[item] = Math.max(0, qty[item] + delta);
+/* ===== STATE ===== */
+let qty = { burger:0, hotdog:0, soda:0 };
+let compOrder=false;
+let selectedPayment=null;
+let allSales=[];
+let orders=[];           // {id,rowId,ts,dateStr,burger,hotdog,soda,total,comp}
+let removed = null;      // {ticket, index, startedAt, timer}
+let undoTimer=null;      // snackbar timer
+let timerInterval=null;  // orders timer loop
+
+/* ===== MAIN (POS) ===== */
+window.addEventListener('load', ()=>{
+  const od=document.getElementById('orderDate'); if(od) od.value=todayStr();
   renderPOS();
+});
+
+function changeQty(item,delta){ qty[item]=Math.max(0, qty[item]+delta); renderPOS(); }
+function toggleComp(){ compOrder=!compOrder; renderPOS(); }
+function selectPayment(type){
+  if(selectedPayment===type){ selectedPayment=null; document.getElementById('cashBtn').classList.remove('selected'); document.getElementById('cardBtn').classList.remove('selected'); }
+  else { selectedPayment=type; document.getElementById('cashBtn').classList.toggle('selected', type==='cash'); document.getElementById('cardBtn').classList.toggle('selected', type==='card'); }
 }
-function toggleComp() {
-  compOrder = !compOrder;
-  renderPOS();
-}
-function selectPayment(type) {
-  if (selectedPayment === type) {
-    selectedPayment = null;
-    document.getElementById("cashBtn").classList.remove("selected");
-    document.getElementById("cardBtn").classList.remove("selected");
-  } else {
-    selectedPayment = type;
-    document.getElementById("cashBtn").classList.toggle("selected", type === "cash");
-    document.getElementById("cardBtn").classList.toggle("selected", type === "card");
-  }
-}
-function renderPOS() {
-  document.getElementById("burgerQty").textContent = qty.burger;
-  document.getElementById("hotdogQty").textContent = qty.hotdog;
-  let total = qty.burger * prices.burger + qty.hotdog * prices.hotdog;
-  const totalEl = document.getElementById("total");
-  if (compOrder) total = 0;
-  totalEl.textContent = total;
-  totalEl.className = compOrder ? "highlight" : "";
-  document.getElementById("compHint").textContent =
-    compOrder ? "Comp active: total is $0 (items still counted as sold)" : "";
+function renderPOS(){
+  document.getElementById('burgerQty').textContent=qty.burger;
+  document.getElementById('hotdogQty').textContent=qty.hotdog;
+  document.getElementById('sodaQty').textContent=qty.soda;
+  let total = qty.burger*prices.burger + qty.hotdog*prices.hotdog + qty.soda*prices.soda;
+  if(compOrder) total=0;
+  document.getElementById('total').textContent=total;
+  document.getElementById('total').className = compOrder ? 'highlight' : '';
+  document.getElementById('compHint').textContent = compOrder ? 'Comp active: total is $0 (items still counted as sold)' : '';
 }
 
-/* Submit with loading state + create order ticket */
-async function submitOrder(e) {
-  const btn = document.getElementById("submitBtn");
-  const od = document.getElementById("orderDate");
-  const selectedDate = (od && od.value) ? od.value : todayStr();
+async function submitOrder(){
+  if(qty.burger===0 && qty.hotdog===0 && qty.soda===0){ alert('No items selected'); return; }
+  if(!selectedPayment){ alert('Select a payment method'); return; }
+  const btn=document.getElementById('submitBtn');
+  btn.textContent='Loading…'; btn.disabled=true; showOverlay(true);
 
-  if (qty.burger === 0 && qty.hotdog === 0) { showToast("No items selected"); return; }
-  if (!selectedPayment) { showToast("Select a payment method"); return; }
+  const dateStr = document.getElementById('orderDate').value || todayStr();
+  const total = compOrder ? 0 : (qty.burger*prices.burger + qty.hotdog*prices.hotdog + qty.soda*prices.soda);
+  const payment = compOrder ? 'N/A' : selectedPayment;
 
-  btn.textContent = "Loading…";
-  btn.disabled = true;
-
-  const orderTotal = compOrder ? 0 : (qty.burger*prices.burger + qty.hotdog*prices.hotdog);
-
-  try {
-    await fetch(API_URL, {
-      method: "POST",
-      cache: "no-store",
+  try{
+    const res = await fetch(API_URL, {
+      method:'POST',
       body: JSON.stringify({
-        date: selectedDate,
-        burger: qty.burger,
-        hotdog: qty.hotdog,
-        comp: compOrder,
-        payment: selectedPayment
+        mode:'create',
+        Date: dateStr,
+        Burger: qty.burger,
+        Hotdog: qty.hotdog,
+        Soda: qty.soda,
+        'Payment Method': payment,
+        Total: total,
+        Time: '' // filled when completed
       })
     });
+    const data = await res.json();
+    const rowId = data && data.rowId ? data.rowId : null;
 
-    // Create local ticket for Orders page
+    // create ticket
     const ticket = {
-      id: `t_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
-      ts: Date.now(),
-      dateStr: selectedDate,
-      burger: qty.burger,
-      hotdog: qty.hotdog,
-      total: orderTotal,
-      comp: compOrder
+      id:`t_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+      rowId,
+      ts:Date.now(),
+      dateStr,
+      burger:qty.burger, hotdog:qty.hotdog, soda:qty.soda,
+      total, comp:compOrder
     };
     orders.push(ticket);
-    renderOrders(); // reflect immediately
-
-    // reset POS state
-    qty = { burger: 0, hotdog: 0 };
-    compOrder = false;
-    selectedPayment = null;
-    document.getElementById("cashBtn").classList.remove("selected");
-    document.getElementById("cardBtn").classList.remove("selected");
+    // reset POS
+    qty={burger:0, hotdog:0, soda:0}; compOrder=false; selectedPayment=null;
+    document.getElementById('cashBtn').classList.remove('selected');
+    document.getElementById('cardBtn').classList.remove('selected');
     renderPOS();
-
-    showToast("Order submitted");
-  } catch (err) {
-    showToast("Error submitting order");
-  } finally {
-    btn.textContent = "Submit Order";
-    btn.disabled = false;
+    alert('Order submitted');
+  }catch(e){
+    alert('Error submitting order.');
+  }finally{
+    btn.textContent='Submit Order'; btn.disabled=false; showOverlay(false);
   }
 }
 
-/* ==== ORDERS PAGE ==== */
-function showOrders() {
-  document.getElementById("main-screen").style.display = "none";
-  document.getElementById("admin-screen").style.display = "none";
-  document.getElementById("orders-screen").style.display = "block";
+/* ===== ORDERS ===== */
+function showOrders(){
+  document.getElementById('main-screen').style.display='none';
+  document.getElementById('admin-screen').style.display='none';
+  document.getElementById('orders-screen').style.display='block';
   renderOrders();
 }
-function renderOrders() {
-  const grid = document.getElementById("orders-grid");
-  const empty = document.getElementById("orders-empty");
-  grid.innerHTML = "";
+function showMain(){
+  document.getElementById('orders-screen').style.display='none';
+  document.getElementById('admin-screen').style.display='none';
+  document.getElementById('main-screen').style.display='block';
+}
+function renderOrders(){
+  const grid=document.getElementById('orders-grid');
+  const empty=document.getElementById('orders-empty');
+  grid.innerHTML='';
+  if(!orders.length){ empty.style.display='block'; }
+  else{
+    empty.style.display='none';
+    for(const t of orders){
+      const card=document.createElement('div'); card.className='ticket'; card.dataset.id=t.id;
 
-  if (!orders.length) {
-    empty.style.display = "block";
-  } else {
-    empty.style.display = "none";
-    for (const t of orders) {
-      const card = document.createElement('div');
-      card.className = 'ticket';
-      card.dataset.id = t.id;
+      const head=document.createElement('div'); head.className='ticket-head';
+      const dl=document.createElement('div');
+      const [y,m,d]=t.dateStr.split('-'); dl.textContent=`${parseInt(m)}/${parseInt(d)}/${y}`;
+      const tm=document.createElement('div'); tm.className='timer'; tm.dataset.ts=t.ts; tm.textContent='0:00';
+      head.appendChild(dl); head.appendChild(tm);
 
-      const head = document.createElement('div');
-      head.className = 'ticket-head';
-      const dateLabel = document.createElement('div');
-      // Format YYYY-MM-DD to M/D/YYYY
-      const [y,m,d] = t.dateStr.split('-');
-      dateLabel.textContent = `${parseInt(m)}/${parseInt(d)}/${y}`;
-      const timer = document.createElement('div');
-      timer.className = 'timer';
-      timer.dataset.ts = t.ts;
-      timer.textContent = '0:00';
-      head.appendChild(dateLabel);
-      head.appendChild(timer);
+      const items=document.createElement('div'); items.className='ticket-items';
+      const lines=[]; if(t.burger>0) lines.push(`${t.burger} Burgers`);
+      if(t.hotdog>0) lines.push(`${t.hotdog} Hot Dogs`);
+      if(t.soda>0)   lines.push(`${t.soda} Sodas`);
+      items.textContent=lines.join('\n');
 
-      const items = document.createElement('div');
-      items.className = 'ticket-items';
-      const lines = [];
-      if (t.burger > 0) lines.push(`${t.burger} Burgers`);
-      if (t.hotdog > 0) lines.push(`${t.hotdog} Hot Dogs`);
-      items.textContent = lines.join('\n');
+      const footer=document.createElement('div'); footer.className='ticket-footer';
+      const tot=document.createElement('div'); tot.innerHTML=`Total: $<strong>${t.total}</strong>${t.comp?' <span class="highlight">(COMP)</span>':''}`;
+      const done=document.createElement('button'); done.className='done-btn'; done.textContent='✓ Done';
+      done.onclick=()=>removeTicket(t.id);
+      footer.appendChild(tot); footer.appendChild(done);
 
-      const footer = document.createElement('div');
-      footer.className = 'ticket-footer';
-      const total = document.createElement('div');
-      total.innerHTML = `Total: $<strong>${t.total}</strong>${t.comp ? ' <span class="highlight">(COMP)</span>' : ''}`;
-      const doneBtn = document.createElement('button');
-      doneBtn.className = 'done-btn';
-      doneBtn.innerHTML = '✓ Done';
-      doneBtn.onclick = () => removeTicket(t.id);
-      footer.appendChild(total);
-      footer.appendChild(doneBtn);
-
-      card.appendChild(head);
-      card.appendChild(items);
-      card.appendChild(footer);
+      card.appendChild(head); card.appendChild(items); card.appendChild(footer);
       grid.appendChild(card);
     }
   }
-
-  // Start / ensure one timer loop
-  if (timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(updateAllTimers, 1000);
-  updateAllTimers(); // immediate paint
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval=setInterval(updateAllTimers,1000);
+  updateAllTimers();
 }
-function updateAllTimers() {
-  const now = Date.now();
-  document.querySelectorAll('.ticket .timer').forEach(el => {
-    const ts = Number(el.dataset.ts);
-    const ms = now - ts;
+function updateAllTimers(){
+  const now=Date.now();
+  document.querySelectorAll('.ticket .timer').forEach(el=>{
+    const ts=Number(el.dataset.ts), ms=now-ts;
     el.textContent = fmtTimer(ms);
     el.classList.remove('green','orange','red');
     el.classList.add(timerClass(ms));
   });
 }
 
-/* Remove + Undo */
-function removeTicket(id) {
-  const idx = orders.findIndex(o => o.id === id);
-  if (idx === -1) return;
-  const ticket = orders[idx];
-
-  // Remove from array and UI
-  orders.splice(idx, 1);
-  const node = document.querySelector(`.ticket[data-id="${id}"]`);
-  if (node && node.parentNode) node.parentNode.removeChild(node);
-  renderOrders(); // may show "No open orders"
-
-  // Prepare undo (last removed only)
-  lastRemoved = { ticket, index: idx };
-  showUndo();
-}
-function showUndo() {
-  const bar = document.getElementById('undoBar');
-  const prog = document.getElementById('undoProgress');
-
-  // reset progress width instantly to 100, then trigger CSS transition to 0
-  prog.style.transition = 'none';
-  prog.style.width = '100%';
-  // force reflow
-  void prog.offsetWidth;
-  prog.style.transition = 'width 5s linear';
-  prog.style.width = '0%';
-
-  bar.style.display = 'block';
-  clearTimeout(undoTimer);
-  undoTimer = setTimeout(() => {
-    hideUndo();
-    // If not undone within 5s, order stays completed (does NOT come back)
-    lastRemoved = null;
-  }, 5000);
-}
-function hideUndo() {
-  document.getElementById('undoBar').style.display = 'none';
-  clearTimeout(undoTimer);
-}
-function undoRemove() {
-  hideUndo();
-  if (!lastRemoved) return;
-  // Reinsert ticket at prior index (or end if index too large)
-  const { ticket, index } = lastRemoved;
-  const idx = Math.min(index, orders.length);
-  orders.splice(idx, 0, ticket);
-  lastRemoved = null;
+/* Complete ticket with 5s undo; write Time only after undo window */
+function removeTicket(id){
+  const idx=orders.findIndex(o=>o.id===id);
+  if(idx===-1) return;
+  const ticket=orders[idx];
+  orders.splice(idx,1);
   renderOrders();
+
+  removed = { ticket, index: idx, startedAt: Date.now(), timer: null };
+  // show undo bar
+  const bar=document.getElementById('undoBar'), prog=document.getElementById('undoProgress');
+  prog.style.transition='none'; prog.style.width='100%'; void prog.offsetWidth;
+  prog.style.transition='width 5s linear'; prog.style.width='0%';
+  bar.style.display='block';
+
+  if(undoTimer) clearTimeout(undoTimer);
+  undoTimer=setTimeout(async ()=>{
+    // commit Time to sheet (only if we still have removed)
+    if(removed && removed.ticket && removed.ticket.rowId){
+      const elapsedMs = Date.now() - removed.ticket.ts;
+      const timeStr = fmtTimer(elapsedMs);
+      try{
+        await fetch(`${API_URL}?rowId=${encodeURIComponent(removed.ticket.rowId)}`, {
+          method:'PUT',
+          body: JSON.stringify({ Time: timeStr })
+        });
+      }catch(e){ /* silent; prevent UI block */ }
+    }
+    document.getElementById('undoBar').style.display='none';
+    removed=null;
+  },5000);
+}
+function undoRemove(){
+  if(!removed) return;
+  // restore ticket
+  const {ticket,index}=removed;
+  orders.splice(Math.min(index,orders.length),0,ticket);
+  removed=null;
+  renderOrders();
+  if(undoTimer) clearTimeout(undoTimer);
+  document.getElementById('undoBar').style.display='none';
 }
 
-/* ==== ADMIN LOGIC ==== */
-async function showAdmin() {
-  document.getElementById("main-screen").style.display = "none";
-  document.getElementById("orders-screen").style.display = "none";
-  document.getElementById("admin-screen").style.display = "block";
+/* ===== ADMIN ===== */
+async function showAdmin(){
+  document.getElementById('main-screen').style.display='none';
+  document.getElementById('orders-screen').style.display='none';
+  document.getElementById('admin-screen').style.display='block';
 
-  const loadingEl = document.getElementById("admin-loading");
-  const contentEl = document.getElementById("admin-content");
-  const dateSelect = document.getElementById("dateSelect");
-  loadingEl.style.display = "block";
-  contentEl.style.display = "none";
-  dateSelect.disabled = true;
-  dateSelect.innerHTML = "";
-
-  try {
-    const res = await fetch(API_URL, { cache: "no-store" });
+  const loading=document.getElementById('admin-loading');
+  const select=document.getElementById('dateSelect');
+  showOverlay(true);
+  loading.style.display='block';
+  try{
+    const res=await fetch(`${API_URL}?mode=list`,{cache:'no-store'});
     allSales = await res.json();
-
-    const dates = [...new Set(allSales.map(r => r.date))].filter(Boolean);
-    if (dates.length === 0) {
-      loadingEl.style.display = "none";
-      contentEl.style.display = "block";
-      dateSelect.innerHTML = "";
-      document.getElementById("totalBlock").innerHTML =
-        "<strong>Total</strong><br>No data available yet.";
+    const dates = [...new Set(allSales.map(r=>r.Date))].filter(Boolean);
+    select.innerHTML='';
+    if(dates.length===0){
+      document.getElementById('totalBlock').innerHTML = "<strong>Total</strong><br>No data available yet.";
       setAdminCardsEmpty();
-      return;
+    }else{
+      for(const d of dates){
+        const opt=document.createElement('option'); opt.value=d;
+        const [y,m,day]=d.split('-'); opt.textContent=`${parseInt(m)}/${parseInt(day)}/${y}`;
+        select.appendChild(opt);
+      }
+      loadStats();
     }
+  }catch(e){
+    alert('Error loading admin data.');
+  }finally{
+    loading.style.display='none';
+    showOverlay(false);
+  }
+}
+function setAdminCardsEmpty(){
+  document.getElementById('hdMoney').textContent = 'Money: $0';
+  document.getElementById('hdItems').textContent = 'Items: 0';
+  document.getElementById('bgMoney').textContent = 'Money: $0';
+  document.getElementById('bgItems').textContent = 'Items: 0';
+  document.getElementById('sdMoney').textContent = 'Money: $0';
+  document.getElementById('sdItems').textContent = 'Items: 0';
+  document.getElementById('cashMoney').textContent = 'Money: $0';
+  document.getElementById('cashItems').textContent = '';
+  document.getElementById('cardMoney').textContent = 'Money: $0';
+  document.getElementById('cardItems').textContent = '';
+}
+function loadStats(){
+  const date=document.getElementById('dateSelect').value;
+  const data=allSales.filter(r=>r.Date===date);
+  if(data.length===0){
+    document.getElementById('totalBlock').innerHTML="<strong>Total</strong><br>No data for selected date.";
+    setAdminCardsEmpty(); return;
+  }
+  const s={total:0, burgerMoney:0, hotdogMoney:0, sodaMoney:0, burgerItems:0, hotdogItems:0, sodaItems:0, cash:0, card:0};
+  for(const o of data){
+    const isComp = (String(o['Payment Method']).toLowerCase()==='n/a');
+    const b=Number(o.Burger)||0, h=Number(o.Hotdog)||0, sd=Number(o.Soda)||0;
+    const subtotal = isComp ? 0 : b*prices.burger + h*prices.hotdog + sd*prices.soda;
+    s.total+=subtotal;
+    s.burgerMoney+= isComp?0:b*prices.burger; s.burgerItems+=b;
+    s.hotdogMoney+= isComp?0:h*prices.hotdog; s.hotdogItems+=h;
+    s.sodaMoney  += isComp?0:sd*prices.soda;  s.sodaItems  +=sd;
+    if(!isComp){
+      if(o['Payment Method']==='cash') s.cash+=subtotal;
+      if(o['Payment Method']==='card') s.card+=subtotal;
+    }
+  }
+  document.getElementById('totalBlock').innerHTML = `<strong>Total</strong><br>Money: $${s.total}`;
+  document.getElementById('bgMoney').textContent = `Money: $${s.burgerMoney}`;
+  document.getElementById('bgItems').textContent = `Items: ${s.burgerItems}`;
+  document.getElementById('hdMoney').textContent = `Money: $${s.hotdogMoney}`;
+  document.getElementById('hdItems').textContent = `Items: ${s.hotdogItems}`;
+  document.getElementById('sdMoney').textContent = `Money: $${s.sodaMoney}`;
+  document.getElementById('sdItems').textContent = `Items: ${s.sodaItems}`;
+  document.getElementById('cashMoney').textContent = `Money: $${s.cash}`;
+  document.getElementById('cardMoney').textContent = `Money: $${s.card}`;
+}
 
-    dates.forEach(d => {
-      const opt = document.createElement("option");
-      opt.value = d;
-      const [y, m, day] = d.split("-");
-      opt.textContent = `${parseInt(m)}/${parseInt(day)}/${y}`;
-      dateSelect.appendChild(opt);
+/* ===== Sheet Modal (Editable Grid) ===== */
+function openSheetModal(){ document.getElementById('sheet-modal').style.display='flex'; loadSheetIntoGrid(); }
+function closeSheetModal(){ document.getElementById('sheet-modal').style.display='none'; }
+async function loadSheetIntoGrid(){
+  showOverlay(true);
+  const tbl=document.getElementById('sheetTable'); tbl.innerHTML='';
+  try{
+    const res = await fetch(`${API_URL}?mode=sheet`, {cache:'no-store'});
+    const data = await res.json(); // 2D array including header
+    if(!Array.isArray(data) || data.length===0){ tbl.innerHTML='<tr><td>No data</td></tr>'; return; }
+    // header
+    const thead = document.createElement('thead');
+    const htr = document.createElement('tr');
+    const headers = data[0];
+    headers.forEach(h=>{
+      const th=document.createElement('th'); th.textContent=h || '';
+      htr.appendChild(th);
     });
-
-    loadStats();
-    contentEl.style.display = "block";
-  } catch (e) {
-    showToast("Error loading admin data");
-  } finally {
-    loadingEl.style.display = "none";
-    dateSelect.disabled = false;
-  }
-}
-function setAdminCardsEmpty() {
-  document.getElementById("hdMoney").textContent   = `Money: $0`;
-  document.getElementById("hdItems").textContent   = `Items: 0`;
-  document.getElementById("bgMoney").textContent   = `Money: $0`;
-  document.getElementById("bgItems").textContent   = `Items: 0`;
-  document.getElementById("cashMoney").textContent = `Money: $0`;
-  document.getElementById("cashItems").textContent = `Items: 0`;
-  document.getElementById("cardMoney").textContent = `Money: $0`;
-  document.getElementById("cardItems").textContent = `Items: 0`;
-}
-function loadStats() {
-  const date = document.getElementById("dateSelect").value;
-  const data = allSales.filter(r => r.date === date);
-
-  if (data.length === 0) {
-    document.getElementById("totalBlock").innerHTML =
-      "<strong>Total</strong><br>No data for selected date.";
-    setAdminCardsEmpty();
-    return;
-  }
-
-  const stats = {
-    totalMoney: 0, totalItems: 0,
-    burgerMoney: 0, burgerItems: 0,
-    hotdogMoney: 0, hotdogItems: 0,
-    cashMoney: 0, cashItems: 0,
-    cardMoney: 0, cardItems: 0
-  };
-
-  for (const o of data) {
-    const isComp = (o.comp === true || o.comp === "true");
-    const b = Number(o.burger) || 0;
-    const h = Number(o.hotdog) || 0;
-    const orderTotal = isComp ? 0 : (b*prices.burger + h*prices.hotdog);
-
-    stats.totalMoney += orderTotal;
-    stats.totalItems += b + h;
-
-    stats.burgerMoney += isComp ? 0 : b*prices.burger;
-    stats.burgerItems += b;
-
-    stats.hotdogMoney += isComp ? 0 : h*prices.hotdog;
-    stats.hotdogItems += h;
-
-    if (o.payment === "cash") {
-      stats.cashMoney += orderTotal;
-      stats.cashItems += b + h;
-    } else if (o.payment === "card") {
-      stats.cardMoney += orderTotal;
-      stats.cardItems += b + h;
+    const thCtrl=document.createElement('th'); thCtrl.textContent='Actions'; htr.appendChild(thCtrl);
+    thead.appendChild(htr); tbl.appendChild(thead);
+    // body
+    const tbody=document.createElement('tbody');
+    for(let r=1;r<data.length;r++){
+      const tr=document.createElement('tr');
+      for(let c=0;c<headers.length;c++){
+        const td=document.createElement('td');
+        td.contentEditable = true;
+        td.textContent = (data[r][c]!==undefined? data[r][c] : '');
+        tr.appendChild(td);
+      }
+      const ctrl=document.createElement('td');
+      ctrl.className='row-controls';
+      const del=document.createElement('button'); del.textContent='Delete'; del.onclick=()=>{ tr.remove(); };
+      ctrl.appendChild(del);
+      tr.appendChild(ctrl);
+      tbody.appendChild(tr);
     }
+    // add an empty row if only header exists
+    if(data.length===1){
+      const tr=document.createElement('tr');
+      headers.forEach(()=>{ const td=document.createElement('td'); td.contentEditable=true; tr.appendChild(td); });
+      const ctrl=document.createElement('td'); ctrl.className='row-controls';
+      const del=document.createElement('button'); del.textContent='Delete'; del.onclick=()=>{ tr.remove(); };
+      ctrl.appendChild(del); tr.appendChild(ctrl); tbody.appendChild(tr);
+    }
+    tbl.appendChild(tbody);
+  }catch(e){
+    alert('Failed to load sheet.');
+  }finally{
+    showOverlay(false);
   }
-
-  document.getElementById("totalBlock").innerHTML =
-    `<strong>Total</strong><br>Money: $${stats.totalMoney} &nbsp;|&nbsp; Items: ${stats.totalItems}`;
-
-  document.getElementById("hdMoney").textContent   = `Money: $${stats.hotdogMoney}`;
-  document.getElementById("hdItems").textContent   = `Items: ${stats.hotdogItems}`;
-  document.getElementById("bgMoney").textContent   = `Money: $${stats.burgerMoney}`;
-  document.getElementById("bgItems").textContent   = `Items: ${stats.burgerItems}`;
-  document.getElementById("cashMoney").textContent = `Money: $${stats.cashMoney}`;
-  document.getElementById("cashItems").textContent = `Items: ${stats.cashItems}`;
-  document.getElementById("cardMoney").textContent = `Money: $${stats.cardMoney}`;
-  document.getElementById("cardItems").textContent = `Items: ${stats.cardItems}`;
 }
-
-/* Screen switch */
-function showMain() {
-  document.getElementById("orders-screen").style.display = "none";
-  document.getElementById("admin-screen").style.display = "none";
-  document.getElementById("main-screen").style.display = "block";
+function addRow(){
+  const tbl=document.getElementById('sheetTable');
+  const headers = Array.from(tbl.querySelectorAll('thead th')).map(th=>th.textContent);
+  const tr=document.createElement('tr');
+  for(let c=0;c<headers.length-1;c++){ // exclude Actions
+    const td=document.createElement('td'); td.contentEditable=true; tr.appendChild(td);
+  }
+  const ctrl=document.createElement('td'); ctrl.className='row-controls';
+  const del=document.createElement('button'); del.textContent='Delete'; del.onclick=()=>{ tr.remove(); };
+  ctrl.appendChild(del); tr.appendChild(ctrl);
+  tbl.querySelector('tbody').appendChild(tr);
 }
-
-/* init */
-renderPOS();
+async function saveGrid(){
+  const tbl=document.getElementById('sheetTable');
+  const headers = Array.from(tbl.querySelectorAll('thead th')).map(th=>th.textContent);
+  const bodyRows = Array.from(tbl.querySelectorAll('tbody tr')).map(tr=>{
+    return Array.from(tr.querySelectorAll('td')).slice(0, headers.length-1).map(td=>td.textContent.trim());
+  });
+  // Push entire sheet back (header + body)
+  const values = [headers.slice(0, headers.length-1), ...bodyRows]; // exclude 'Actions' header/col
+  showOverlay(true);
+  try{
+    await fetch(`${API_URL}?mode=replace`, { method:'PUT', body: JSON.stringify({ values }) });
+    alert('Sheet saved.');
+  }catch(e){
+    alert('Failed to save sheet.');
+  }finally{
+    showOverlay(false);
+  }
+}
 </script>
 </body>
 </html>
+
