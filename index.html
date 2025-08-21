@@ -6,158 +6,86 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 <style>
   :root{
-    --bg:#ffffff;
-    --text:#000000;
-    --accent:#000000;
-    --muted:#f6f6f6;
-    --border:#000000;
-    --border2:#222222;
-    --line:#000000;
-    --danger:#c00000;
-    --ok:#0a8f08;
-    --warn:#d97900;
-    --shadow:0 10px 20px rgba(0,0,0,0.18);
-    --pad:14px;
-    --radius:0px; /* sharp edges */
-    --font:18px;
+    --bg:#ffffff; --text:#000000; --accent:#000000; --muted:#f6f6f6;
+    --border:#000000; --border2:#222222; --line:#000000;
+    --danger:#c00000; --ok:#0a8f08; --warn:#d97900;
+    --pad:14px; --radius:0px; --font:18px;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
   body{
-    margin:0 auto;
-    max-width:720px; min-width:720px; /* force desktop layout on phones */
+    margin:0 auto; max-width:720px; min-width:720px; /* force desktop on mobile */
     background:var(--bg); color:var(--text);
     font-family:Arial, Helvetica, sans-serif;
     font-size:var(--font); line-height:1.35;
-    padding:20px 20px 48px; /* extra bottom for footer */
-    text-align:center;
-    -webkit-tap-highlight-color:transparent;
-    touch-action:manipulation;
+    padding:20px 20px 48px; text-align:center;
+    -webkit-tap-highlight-color:transparent; touch-action:manipulation;
   }
   h1,h2,h3{margin:0 0 10px 0; font-weight:800; letter-spacing:.3px}
-  h1{font-size:26px}
-  h2{font-size:22px}
-  h3{font-size:20px}
-
+  h1{font-size:26px} h2{font-size:22px} h3{font-size:20px}
   .brand{margin:2px 0 14px; font-weight:800; font-size:26px; letter-spacing:.3px}
 
-  /* Cards */
-  .card{
-    border:2px solid var(--border);
-    border-radius:var(--radius);
-    padding:var(--pad);
-    background:#fff;
-    text-align:left;
-    box-shadow:none;
-    margin-bottom:14px;
-  }
+  .card{border:2px solid var(--border); border-radius:var(--radius); padding:var(--pad); background:#fff; text-align:left; margin-bottom:14px}
   .grid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
   .kv{margin:4px 0}
   .line{height:2px; background:var(--line); opacity:.12; margin:8px 0}
 
-  /* Buttons */
-  button{
-    padding:12px 14px; font-size:var(--font);
-    border:2px solid var(--border); background:#fff; color:#000;
-    border-radius:var(--radius); cursor:pointer;
-  }
-  button:hover{filter:brightness(.98)}
-  button:active{transform:translateY(1px)}
+  button{padding:12px 14px; font-size:var(--font); border:2px solid var(--border); background:#fff; color:#000; border-radius:var(--radius); cursor:pointer}
+  button:hover{filter:brightness(.98)} button:active{transform:translateY(1px)}
   button:disabled{opacity:.6; cursor:not-allowed}
   .btn-row{display:flex; gap:14px; flex-wrap:wrap; justify-content:center}
   .btn-full{width:100%}
   .selected{background:#000; color:#fff; border-color:#000}
 
-  /* Inputs */
   input[type="date"], select, input[type="text"], input[type="number"]{
     width:100%; padding:12px 14px; font-size:var(--font);
-    border:2px solid var(--border); border-radius:var(--radius);
-    background:#fff;
+    border:2px solid var(--border); border-radius:var(--radius); background:#fff;
   }
 
-  /* Menu rows */
   .item-row{
     display:grid; grid-template-columns:1fr auto auto auto;
-    align-items:center; gap:10px; padding:6px 0;
-    border-bottom:2px solid var(--border2);
+    align-items:center; gap:10px; padding:6px 0; border-bottom:2px solid var(--border2);
   }
   .item-row:last-child{border-bottom:none}
   .price{text-align:center; min-width:50px}
   .qty-controls{display:grid; grid-template-columns:auto 60px auto; gap:8px; align-items:center; justify-items:center}
-  .qty-badge{
-    display:inline-block; min-width:56px; text-align:center; padding:6px 8px;
-    border:2px solid var(--border); background:#fff; border-radius:var(--radius);
-    font-variant-numeric:tabular-nums;
-  }
-
-  /* Color cues */
+  .qty-badge{display:inline-block; min-width:56px; text-align:center; padding:6px 8px; border:2px solid var(--border); background:#fff; border-radius:var(--radius); font-variant-numeric:tabular-nums}
   .highlight{color:var(--danger); font-weight:800}
 
-  /* Screens */
   #admin-screen,#orders-screen,#sheet-modal{display:none}
 
-  /* Loading Overlay */
-  #overlay{
-    position:fixed; inset:0; background:rgba(0,0,0,0.55);
-    display:none; align-items:center; justify-content:center; z-index:9998;
-  }
-  .overlay-card{
-    background:#fff; color:#000; border:3px solid #000; border-radius:0;
-    padding:24px 28px; text-align:center; box-shadow:var(--shadow);
-    min-width:280px;
-  }
+  #overlay{position:fixed; inset:0; background:rgba(0,0,0,0.55); display:none; align-items:center; justify-content:center; z-index:9998}
+  .overlay-card{background:#fff; color:#000; border:3px solid #000; border-radius:0; padding:24px 28px; text-align:center; min-width:280px}
   .overlay-card h2{font-size:28px; margin-bottom:8px}
 
-  /* ORDERS */
   .orders-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px}
   .orders-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px}
   .ticket{border:2px solid #000; background:#fff; border-radius:0; padding:14px; text-align:left}
   .ticket-head{display:flex; justify-content:space-between; border-bottom:2px solid #222; padding-bottom:6px; margin-bottom:6px}
   .ticket-items{white-space:pre-line}
   .ticket-footer{display:flex; justify-content:space-between; border-top:2px solid #222; padding-top:6px; margin-top:6px}
-  .timer{font-weight:800}
-  .timer.green{color:var(--ok)}
-  .timer.orange{color:var(--warn)}
-  .timer.red{color:var(--danger)}
+  .timer{font-weight:800} .timer.green{color:var(--ok)} .timer.orange{color:var(--warn)} .timer.red{color:var(--danger)}
   .done-btn{background:#000; color:#fff; border-color:#000}
 
-  /* Undo snackbar */
-  #undoBar{
-    position:fixed; right:20px; bottom:20px; z-index:9997; display:none;
-    min-width:280px; background:#111; color:#fff; border:2px solid #000; border-radius:0;
-    box-shadow:var(--shadow);
-  }
+  #undoBar{position:fixed; right:20px; bottom:20px; z-index:9997; display:none; min-width:280px; background:#111; color:#fff; border:2px solid #000; border-radius:0}
   #undoBar .content{padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px}
   #undoBar button{background:#fff; color:#000; border:2px solid #000}
   #undoProgress{height:6px; background:#4caf50; width:100%; transition:width linear}
 
-  /* Admin grid viewer */
-  #sheet-modal{position:fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:9999; background:rgba(0,0,0,0.55)}
-  .sheet-window{
-    background:#fff; border:3px solid #000; border-radius:0; width:90%; max-width:900px; max-height:80vh; display:flex; flex-direction:column;
-  }
+  #sheet-modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999; background:rgba(0,0,0,0.55)}
+  .sheet-window{background:#fff; border:3px solid #000; border-radius:0; width:90%; max-width:900px; max-height:80vh; display:flex; flex-direction:column}
   .sheet-head{display:flex; align-items:center; justify-content:space-between; padding:10px 12px; border-bottom:3px solid #000}
   .sheet-title{font-weight:800; font-size:20px}
   .sheet-actions{display:flex; gap:10px}
   .sheet-body{overflow:auto}
-  table.sheet{
-    width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums;
-  }
-  table.sheet th, table.sheet td{
-    border:2px solid #000; padding:8px 10px; text-align:center;
-  }
+  table.sheet{width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums}
+  table.sheet th, table.sheet td{border:2px solid #000; padding:8px 10px; text-align:center}
   table.sheet th{background:#f1f1f1; position:sticky; top:0; z-index:1; font-weight:800}
   td[contenteditable="true"]{background:#fff}
 
-  /* Access Gate (numeric keypad) */
-  #gate{
-    position:fixed; inset:0; background:#fff; z-index:10000;
-    display:flex; align-items:center; justify-content:center; padding:24px;
-  }
-  #gate .panel{
-    width:100%; max-width:360px;
-    border:3px solid #000; border-radius:0; padding:18px; text-align:center; background:#fff;
-  }
+  /* Keypad gate */
+  #gate{position:fixed; inset:0; background:#fff; z-index:10000; display:flex; align-items:center; justify-content:center; padding:24px}
+  #gate .panel{width:100%; max-width:360px; border:3px solid #000; border-radius:0; padding:18px; text-align:center; background:#fff; position:relative}
   .code-dots{display:flex; justify-content:center; gap:10px; margin:10px 0 14px}
   .dot{width:16px; height:16px; border-radius:50%; border:3px solid #000; background:transparent}
   .dot.filled{background:#000}
@@ -165,19 +93,17 @@
   .keypad button{padding:16px 0; font-size:20px; border:3px solid #000; border-radius:0; background:#fff; cursor:pointer}
   .key-wide{grid-column:span 2}
   #gate .err{color:#c00; min-height:1.3em; margin-top:10px}
+  /* keypad footer pinned at the very bottom */
+  #gateFooter{position:fixed; left:0; right:0; bottom:6px; text-align:center; font-size:12px}
+  #gateFooter span{background:rgba(255,255,255,0.9); padding:2px 6px; border:1px solid #000}
 
-  /* Footer */
-  .footer{
-    position:fixed; left:0; right:0; bottom:6px;
-    text-align:center; font-size:12px; color:#000;
-    pointer-events:none; /* clicks pass through */
-  }
-  .footer span{background:rgba(255,255,255,0.85); padding:2px 6px}
+  .footer{position:fixed; left:0; right:0; bottom:6px; text-align:center; font-size:12px; pointer-events:none}
+  .footer span{background:rgba(255,255,255,0.9); padding:2px 6px; border:1px solid #000}
 </style>
 </head>
 <body>
 
-<!-- Access Gate (requires code 5253 each load/refresh) -->
+<!-- Keypad Gate -->
 <div id="gate" aria-modal="true" role="dialog">
   <div class="panel" aria-label="Enter Access Code">
     <h2>Enter Access Code</h2>
@@ -193,8 +119,8 @@
       <button onclick="unlock()" class="key-wide">Enter</button>
     </div>
     <div class="err" id="gateErr" aria-live="polite"></div>
-    <div style="margin-top:10px; font-size:12px; opacity:0.8;">©MrPress Enterprise - Version <span id="verGate"></span></div>
   </div>
+  <div id="gateFooter"><span>©MrPress Enterprise - Version <span id="verGate"></span></span></div>
 </div>
 
 <!-- Loading Overlay -->
@@ -219,7 +145,7 @@
       </div>
       <div class="item-row">
         <div class="item-name">Hot Dog</div>
-        <div class="price">$5</</div>
+        <div class="price">$5</div>
         <div class="qty-controls">
           <button onclick="changeQty('hotdog',1)">+</button>
           <span id="hotdogQty" class="qty-badge">0</span>
@@ -239,7 +165,7 @@
       <div class="kv" style="text-align:center;"><strong>Total:</strong> $<span id="total">0</span></div>
     </div>
 
-    <!-- Payment (with Comp) -->
+    <!-- Payment -->
     <div class="card">
       <h2>Payment</h2>
       <div class="btn-row">
@@ -250,9 +176,7 @@
       <div class="btn-row">
         <button class="btn-full" onclick="toggleComp()">Comp Order</button>
       </div>
-      <div class="kv" style="text-align:center; margin-top:6px">
-        <span id="compHint"></span>
-      </div>
+      <div class="kv" style="text-align:center; margin-top:6px"><span id="compHint"></span></div>
     </div>
   </div>
 
@@ -266,9 +190,7 @@
   <!-- Actions -->
   <div class="card">
     <h2>Actions</h2>
-    <div class="btn-row">
-      <button id="submitBtn" class="btn-full" onclick="submitOrder()">Submit Order</button>
-    </div>
+    <div class="btn-row"><button id="submitBtn" class="btn-full" onclick="submitOrder()">Submit Order</button></div>
     <div class="btn-row" style="margin-top:10px">
       <button class="btn-full" onclick="showOrders()">Orders</button>
       <button class="btn-full" onclick="showAdmin()">Admin Panel</button>
@@ -294,11 +216,11 @@
       <button class="btn-full" onclick="window.open('https://drive.google.com/drive/folders/1eZPlupv0k_2W8foDiN2PhuQwjjIoMJz6?usp=sharing','_blank')">Files (Drive Folder)</button>
       <button class="btn-full" onclick="openSheetModal()">View Sheet (Editable)</button>
     </div>
+
     <div class="kv">
       <label for="dateSelect"><strong>Date:</strong></label>
       <select id="dateSelect" onchange="loadStats()"></select>
     </div>
-    <div id="totalBlock" class="kv" style="margin-top:8px;"></div>
   </div>
 
   <div id="admin-content">
@@ -308,7 +230,6 @@
       <div class="card"><h3>Burger</h3><div id="bgMoney"></div><div id="bgItems"></div></div>
       <div class="card"><h3>Card</h3><div id="cardMoney"></div><div id="cardItems"></div></div>
       <div class="card"><h3>Soda</h3><div id="sdMoney"></div><div id="sdItems"></div></div>
-      <!-- New 6th box under Card -->
       <div class="card"><h3>Total</h3><div id="totMoney"></div><div id="totItems"></div></div>
     </div>
 
@@ -318,7 +239,7 @@
   </div>
 </div>
 
-<!-- Sheet Modal -->
+<!-- Sheet Modal (hidden until clicked) -->
 <div id="sheet-modal">
   <div class="sheet-window">
     <div class="sheet-head">
@@ -344,17 +265,17 @@
   <div id="undoProgress"></div>
 </div>
 
-<!-- Footer (on every page) -->
+<!-- Footer -->
 <div class="footer"><span>©MrPress Enterprise - Version <span id="versionText"></span></span></div>
 
 <script>
 /* ===== CONFIG ===== */
 const API_URL = "https://script.google.com/macros/s/AKfycbwb_KZrwBErcWTsvnERHS33q0xXggrP1ymF_uxkH0dHiyxoY_nwZv2H4RsHcJfQAcY3/exec";
 const ACCESS_CODE = "5253";
-const APP_VERSION = "0.2"; /* incremented per your rule */
+const APP_VERSION = "0.3";
 const prices = { burger:7, hotdog:5, soda:1 };
 
-/* ===== ACCESS GATE ===== */
+/* ===== KEYPAD ===== */
 let gateBuffer = "";
 function updateDots(){ for(let i=0;i<4;i++){ const d=document.getElementById("dot"+i); if(d) d.classList.toggle("filled", i < gateBuffer.length); } }
 function pressKey(d){ if(gateBuffer.length>=4) return; gateBuffer+=d; updateDots(); document.getElementById("gateErr").textContent=""; if(gateBuffer.length===4) unlock(); }
@@ -363,8 +284,8 @@ function clearCode(){ gateBuffer=""; updateDots(); document.getElementById("gate
 function unlock(){
   if(gateBuffer===ACCESS_CODE){
     document.getElementById("gate").style.display="none";
+    document.getElementById("sheet-modal").style.display="none"; // ensure hidden
     const od=document.getElementById("orderDate"); if(od && !od.value) od.value=todayStr();
-    // IMPORTANT: Do NOT auto-open sheet modal here.
   }else{ document.getElementById("gateErr").textContent="Invalid code."; clearCode(); }
 }
 window.addEventListener("keydown",(e)=>{
@@ -387,7 +308,7 @@ let qty = { burger:0, hotdog:0, soda:0 };
 let compOrder=false;
 let selectedPayment=null;
 let allSales=[];
-let orders=[];           // {id,rowId,ts,dateStr,burger,hotdog,soda,total,comp}
+let orders=[];
 let removed = null;
 let undoTimer=null;
 let timerInterval=null;
@@ -400,7 +321,7 @@ window.addEventListener('load', ()=>{
   renderPOS();
 });
 
-/* ===== MAIN (POS) ===== */
+/* ===== POS ===== */
 function changeQty(item,delta){ qty[item]=Math.max(0, qty[item]+delta); renderPOS(); }
 function toggleComp(){ compOrder=!compOrder; renderPOS(); }
 function selectPayment(type){
@@ -420,7 +341,6 @@ function renderPOS(){
 
 async function submitOrder(){
   if(qty.burger===0 && qty.hotdog===0 && qty.soda===0){ alert('No items selected'); return; }
-  // Payment required only if NOT comp
   if(!compOrder && !selectedPayment){ alert('Select a payment method'); return; }
 
   const btn=document.getElementById('submitBtn');
@@ -433,7 +353,7 @@ async function submitOrder(){
   try{
     const res = await fetch(API_URL, {
       method:'POST',
-      headers:{ 'Content-Type':'application/json' },   /* fix: ensure JSON body */
+      headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({
         mode:'create',
         Date: dateStr,
@@ -442,32 +362,28 @@ async function submitOrder(){
         Soda: qty.soda,
         'Payment Method': payment,
         Total: total,
-        Time: '' // set on completion after undo window
+        Time: ''
       })
     });
-    if(!res.ok){ throw new Error('Network response not ok'); }
+    if(!res.ok) throw new Error('Create failed: ' + res.status);
     const data = await res.json();
-    const rowId = data && data.rowId ? data.rowId : null;
+    const rowId = (data && data.rowId) ? data.rowId : null;
 
-    // Create ticket
     const ticket = {
       id:`t_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
-      rowId,
-      ts:Date.now(),
-      dateStr,
+      rowId, ts:Date.now(), dateStr,
       burger:qty.burger, hotdog:qty.hotdog, soda:qty.soda,
       total, comp:compOrder
     };
     orders.push(ticket);
 
-    // Reset
     qty={burger:0, hotdog:0, soda:0}; compOrder=false; selectedPayment=null;
     document.getElementById('cashBtn').classList.remove('selected');
     document.getElementById('cardBtn').classList.remove('selected');
     renderPOS();
     alert('Order submitted');
   }catch(e){
-    alert('Error submitting order. Check Apps Script deployment and headers.');
+    alert('Error submitting order. Verify Apps Script is updated & deployed. ' + (e.message||'')); 
   }finally{
     btn.textContent='Submit Order'; btn.disabled=false; showOverlay(false);
   }
@@ -530,17 +446,13 @@ function updateAllTimers(){
     el.classList.add(timerClass(ms));
   });
 }
-
-/* Complete ticket with 5s undo; write Time only after undo window */
 function removeTicket(id){
   const idx=orders.findIndex(o=>o.id===id);
   if(idx===-1) return;
   const ticket=orders[idx];
-  orders.splice(idx,1);
-  renderOrders();
+  orders.splice(idx,1); renderOrders();
 
   removed = { ticket, index: idx };
-  // show undo bar
   const bar=document.getElementById('undoBar'), prog=document.getElementById('undoProgress');
   prog.style.transition='none'; prog.style.width='100%'; void prog.offsetWidth;
   prog.style.transition='width 5s linear'; prog.style.width='0%';
@@ -548,17 +460,17 @@ function removeTicket(id){
 
   if(undoTimer) clearTimeout(undoTimer);
   undoTimer=setTimeout(async ()=>{
-    // commit Time to sheet (only if not undone)
     if(removed && removed.ticket && removed.ticket.rowId){
       const elapsedMs = Date.now() - removed.ticket.ts;
       const timeStr = fmtTimer(elapsedMs);
       try{
-        await fetch(API_URL, {
+        const res = await fetch(API_URL, {
           method:'POST',
           headers:{ 'Content-Type':'application/json' },
           body: JSON.stringify({ mode:'update', rowId: removed.ticket.rowId, updates: { Time: timeStr } })
         });
-      }catch(e){ /* silent */ }
+        // ignore res errors in UI
+      }catch(e){}
     }
     document.getElementById('undoBar').style.display='none';
     removed=null;
@@ -568,8 +480,7 @@ function undoRemove(){
   if(!removed) return;
   const {ticket,index}=removed;
   orders.splice(Math.min(index,orders.length),0,ticket);
-  removed=null;
-  renderOrders();
+  removed=null; renderOrders();
   if(undoTimer) clearTimeout(undoTimer);
   document.getElementById('undoBar').style.display='none';
 }
@@ -583,14 +494,16 @@ async function showAdmin(){
   showOverlay(true);
   try{
     const res=await fetch(`${API_URL}?mode=list`,{cache:'no-store'});
-    if(!res.ok) throw new Error('Admin list fetch failed');
+    if(!res.ok) throw new Error('list failed');
     allSales = await res.json();
+
     const dates = [...new Set(allSales.map(r=>r.Date))].filter(Boolean);
     const select=document.getElementById('dateSelect');
     select.innerHTML='';
     if(dates.length===0){
-      document.getElementById('totalBlock').innerHTML = "<strong>Total</strong><br>No data available yet.";
-      setAdminCardsEmpty();
+      setAdminCards(0,0,0,0,0,0,0,0,0,0,0,0);
+      document.getElementById('totMoney').textContent='Money: $0';
+      document.getElementById('totItems').textContent='Items: 0';
     }else{
       for(const d of dates){
         const opt=document.createElement('option'); opt.value=d;
@@ -601,76 +514,49 @@ async function showAdmin(){
     }
   }catch(e){
     alert('Error loading admin data.');
-  }finally{
-    showOverlay(false);
-  }
+  }finally{ showOverlay(false); }
 }
-function setAdminCardsEmpty(){
-  document.getElementById('hdMoney').textContent = 'Money: $0';
-  document.getElementById('hdItems').textContent = 'Items: 0';
-  document.getElementById('bgMoney').textContent = 'Money: $0';
-  document.getElementById('bgItems').textContent = 'Items: 0';
-  document.getElementById('sdMoney').textContent = 'Money: $0';
-  document.getElementById('sdItems').textContent = 'Items: 0';
-  document.getElementById('cashMoney').textContent = 'Money: $0';
-  document.getElementById('cashItems').textContent = 'Items: 0';
-  document.getElementById('cardMoney').textContent = 'Money: $0';
-  document.getElementById('cardItems').textContent = 'Items: 0';
-  document.getElementById('totMoney').textContent = 'Money: $0';
-  document.getElementById('totItems').textContent = 'Items: 0';
+function setAdminCards(bgM,bgI,hdM,hdI,sdM,sdI,cashM,cashI,cardM,cardI,totM,totI){
+  document.getElementById('bgMoney').textContent = `Money: $${bgM}`;
+  document.getElementById('bgItems').textContent = `Items: ${bgI}`;
+  document.getElementById('hdMoney').textContent = `Money: $${hdM}`;
+  document.getElementById('hdItems').textContent = `Items: ${hdI}`;
+  document.getElementById('sdMoney').textContent = `Money: $${sdM}`;
+  document.getElementById('sdItems').textContent = `Items: ${sdI}`;
+  document.getElementById('cashMoney').textContent = `Money: $${cashM}`;
+  document.getElementById('cashItems').textContent = `Items: ${cashI}`;
+  document.getElementById('cardMoney').textContent = `Money: $${cardM}`;
+  document.getElementById('cardItems').textContent = `Items: ${cardI}`;
+  document.getElementById('totMoney').textContent  = `Money: $${totM}`;
+  document.getElementById('totItems').textContent  = `Items: ${totI}`;
 }
 function loadStats(){
   const date=document.getElementById('dateSelect').value;
   const data=allSales.filter(r=>r.Date===date);
-  if(data.length===0){
-    document.getElementById('totalBlock').innerHTML="<strong>Total</strong><br>No data for selected date.";
-    setAdminCardsEmpty(); return;
-  }
-  const s={
-    totalMoney:0, totalItems:0,
-    burgerMoney:0, burgerItems:0,
-    hotdogMoney:0, hotdogItems:0,
-    sodaMoney:0, sodaItems:0,
-    cashMoney:0, cashItems:0,
-    cardMoney:0, cardItems:0
-  };
+  if(data.length===0){ setAdminCards(0,0,0,0,0,0,0,0,0,0,0,0); return; }
+
+  let bgM=0,bgI=0, hdM=0,hdI=0, sdM=0,sdI=0, cashM=0,cashI=0, cardM=0,cardI=0, totM=0,totI=0;
   for(const o of data){
-    const isComp = (String(o['Payment Method']).toLowerCase()==='n/a');
+    const isComp = String(o['Payment Method']).toLowerCase()==='n/a';
     const b=Number(o.Burger)||0, h=Number(o.Hotdog)||0, sd=Number(o.Soda)||0;
-    const itemsCount = b + h + sd;
+    const items = b+h+sd;
     const subtotal = isComp ? 0 : b*prices.burger + h*prices.hotdog + sd*prices.soda;
 
-    s.totalMoney += subtotal;
-    s.totalItems += itemsCount;
-
-    s.burgerMoney += isComp?0:b*prices.burger; s.burgerItems += b;
-    s.hotdogMoney += isComp?0:h*prices.hotdog; s.hotdogItems += h;
-    s.sodaMoney   += isComp?0:sd*prices.soda;  s.sodaItems   += sd;
+    bgM += isComp?0:b*prices.burger; bgI += b;
+    hdM += isComp?0:h*prices.hotdog; hdI += h;
+    sdM += isComp?0:sd*prices.soda;  sdI += sd;
 
     if(!isComp){
-      if(String(o['Payment Method']).toLowerCase()==='cash'){
-        s.cashMoney += subtotal; s.cashItems += itemsCount;
-      }else if(String(o['Payment Method']).toLowerCase()==='card'){
-        s.cardMoney += subtotal; s.cardItems += itemsCount;
-      }
+      if(String(o['Payment Method']).toLowerCase()==='cash'){ cashM+=subtotal; cashI+=items; }
+      else if(String(o['Payment Method']).toLowerCase()==='card'){ cardM+=subtotal; cardI+=items; }
     }
+
+    totM += subtotal; totI += items;
   }
-  document.getElementById('totalBlock').innerHTML = `<strong>Summary for Selected Date</strong>`;
-  document.getElementById('bgMoney').textContent   = `Money: $${s.burgerMoney}`;
-  document.getElementById('bgItems').textContent   = `Items: ${s.burgerItems}`;
-  document.getElementById('hdMoney').textContent   = `Money: $${s.hotdogMoney}`;
-  document.getElementById('hdItems').textContent   = `Items: ${s.hotdogItems}`;
-  document.getElementById('sdMoney').textContent   = `Money: $${s.sodaMoney}`;
-  document.getElementById('sdItems').textContent   = `Items: ${s.sodaItems}`;
-  document.getElementById('cashMoney').textContent = `Money: $${s.cashMoney}`;
-  document.getElementById('cashItems').textContent = `Items: ${s.cashItems}`;
-  document.getElementById('cardMoney').textContent = `Money: $${s.cardMoney}`;
-  document.getElementById('cardItems').textContent = `Items: ${s.cardItems}`;
-  document.getElementById('totMoney').textContent  = `Money: $${s.totalMoney}`;
-  document.getElementById('totItems').textContent  = `Items: ${s.totalItems}`;
+  setAdminCards(bgM,bgI,hdM,hdI,sdM,sdI,cashM,cashI,cardM,cardI,totM,totI);
 }
 
-/* ===== Sheet Modal (Editable Grid) ===== */
+/* ===== SHEET VIEWER ===== */
 function openSheetModal(){ document.getElementById('sheet-modal').style.display='flex'; loadSheetIntoGrid(); }
 function closeSheetModal(){ document.getElementById('sheet-modal').style.display='none'; }
 async function loadSheetIntoGrid(){
@@ -679,53 +565,38 @@ async function loadSheetIntoGrid(){
   try{
     const res = await fetch(`${API_URL}?mode=sheet`, {cache:'no-store'});
     if(!res.ok) throw new Error('sheet fetch failed');
-    const data = await res.json(); // 2D array including header
+    const data = await res.json();
     if(!Array.isArray(data) || data.length===0){ tbl.innerHTML='<tr><td>No data</td></tr>'; return; }
-    // header
-    const thead = document.createElement('thead');
-    const htr = document.createElement('tr');
-    const headers = data[0];
-    headers.forEach(h=>{
-      const th=document.createElement('th'); th.textContent=h || '';
-      htr.appendChild(th);
-    });
+    const thead = document.createElement('thead'); const htr = document.createElement('tr'); const headers = data[0];
+    headers.forEach(h=>{ const th=document.createElement('th'); th.textContent=h||''; htr.appendChild(th); });
     const thCtrl=document.createElement('th'); thCtrl.textContent='Actions'; htr.appendChild(thCtrl);
     thead.appendChild(htr); tbl.appendChild(thead);
-    // body
+
     const tbody=document.createElement('tbody');
     for(let r=1;r<data.length;r++){
       const tr=document.createElement('tr');
       for(let c=0;c<headers.length;c++){
-        const td=document.createElement('td');
-        td.contentEditable = true;
-        td.textContent = (data[r][c]!==undefined? data[r][c] : '');
-        tr.appendChild(td);
+        const td=document.createElement('td'); td.contentEditable=true; td.textContent=(data[r][c]!==undefined? data[r][c] : ''); tr.appendChild(td);
       }
-      const ctrl=document.createElement('td');
-      const del=document.createElement('button'); del.textContent='Delete'; del.onclick=()=>{ tr.remove(); };
+      const ctrl=document.createElement('td'); const del=document.createElement('button'); del.textContent='Delete'; del.onclick=()=>tr.remove();
       ctrl.appendChild(del); tr.appendChild(ctrl); tbody.appendChild(tr);
     }
     if(data.length===1){
       const tr=document.createElement('tr');
       headers.forEach(()=>{ const td=document.createElement('td'); td.contentEditable=true; tr.appendChild(td); });
-      const ctrl=document.createElement('td'); const del=document.createElement('button'); del.textContent='Delete'; del.onclick=()=>{ tr.remove(); };
+      const ctrl=document.createElement('td'); const del=document.createElement('button'); del.textContent='Delete'; del.onclick=()=>tr.remove();
       ctrl.appendChild(del); tr.appendChild(ctrl); tbody.appendChild(tr);
     }
     tbl.appendChild(tbody);
-  }catch(e){
-    alert('Failed to load sheet.');
-  }finally{
-    showOverlay(false);
-  }
+  }catch(e){ alert('Failed to load sheet.'); }
+  finally{ showOverlay(false); }
 }
 function addRow(){
   const tbl=document.getElementById('sheetTable');
   const headers = Array.from(tbl.querySelectorAll('thead th')).map(th=>th.textContent);
   const tr=document.createElement('tr');
-  for(let c=0;c<headers.length-1;c++){ // exclude Actions
-    const td=document.createElement('td'); td.contentEditable=true; tr.appendChild(td);
-  }
-  const ctrl=document.createElement('td'); const del=document.createElement('button'); del.textContent='Delete'; del.onclick=()=>{ tr.remove(); };
+  for(let c=0;c<headers.length-1;c++){ const td=document.createElement('td'); td.contentEditable=true; tr.appendChild(td); }
+  const ctrl=document.createElement('td'); const del=document.createElement('button'); del.textContent='Delete'; del.onclick=()=>tr.remove();
   ctrl.appendChild(del); tr.appendChild(ctrl);
   tbl.querySelector('tbody').appendChild(tr);
 }
@@ -735,17 +606,14 @@ async function saveGrid(){
   const bodyRows = Array.from(tbl.querySelectorAll('tbody tr')).map(tr=>{
     return Array.from(tr.querySelectorAll('td')).slice(0, headers.length-1).map(td=>td.textContent.trim());
   });
-  const values = [headers.slice(0, headers.length-1), ...bodyRows]; // exclude 'Actions' header/col
+  const values = [headers.slice(0, headers.length-1), ...bodyRows];
   showOverlay(true);
   try{
     const res = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ mode:'replace', values }) });
     if(!res.ok) throw new Error('save failed');
     alert('Sheet saved.');
-  }catch(e){
-    alert('Failed to save sheet.');
-  }finally{
-    showOverlay(false);
-  }
+  }catch(e){ alert('Failed to save sheet.'); }
+  finally{ showOverlay(false); }
 }
 </script>
 </body>
